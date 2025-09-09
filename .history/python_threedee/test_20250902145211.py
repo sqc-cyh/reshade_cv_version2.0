@@ -1,0 +1,16 @@
+import numpy as np
+from scipy.spatial.transform import Rotation as R
+
+mat = np.array([
+    [0.7203921675682068,0.08016251772642136,0.6889188885688782],
+[0.6935664415359497,-0.08460984379053116,-0.7154068350791931],
+[0.0009405052987858653,0.9931843280792236,-0.11655029654502869]
+])
+
+
+# ZYX顺序，degrees=True
+rot = R.from_matrix(mat)
+euler = rot.as_euler('ZXY', degrees=True)
+print("Rotation.Z (Yaw):", euler[0])
+print("Rotation.Y (Roll):", euler[1])
+print("Rotation.X (Pitch):", euler[2])

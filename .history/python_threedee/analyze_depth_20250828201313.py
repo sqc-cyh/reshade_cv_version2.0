@@ -1,0 +1,1 @@
+"F:\SteamLibrary\steamapps\common\Grand Theft Auto V\cv_saved\GTAV_2025-08-28_88564288_depth.npy"

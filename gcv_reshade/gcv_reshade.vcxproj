@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{D9379DE1-DFF6-4190-ACC5-913D9D22AB22}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(VisualStudioVersion)'&gt;='16.0'">10.0</WindowsTargetPlatformVersion>
+    <ProjectName>gcv_reshade</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'=='16.0'">v142</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'=='17.0'">v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)'=='Debug'">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)'=='Release'">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)build\intermediate_gcv\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>cv_captures</TargetName>
+    <TargetExt>.addon</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgConfiguration>Release</VcpkgConfiguration>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>F:\Visual_Studio\Repos\reshade-5.8.0\deps\imgui;F:\Visual_Studio\Repos\reshade-5.8.0\include;F:\Visual_Studio\Repos\reshade_cv;F:\Visual_Studio\Repos\reshade_cv\gcv_utils;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>F:\hlsl.bin\Release\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;ImTextureID=ImU64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>F:\Visual_Studio\Repos\reshade-5.8.0\deps\imgui;F:\Visual_Studio\Repos\reshade-5.8.0\include;F:\Visual_Studio\Repos\reshade_cv;F:\Visual_Studio\Repos\reshade_cv\gcv_utils;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;xxhash.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>F:\hlsl.bin\Release\lib;$(SolutionDir)build\x64\$(Configuration)\;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\lib</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\3rdparty\cnpy.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\error.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\rcdecoder.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\rcencoder.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\rcqsmodel.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\read.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\version.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\write.cpp" />
+    <ClCompile Include="..\gcv_games\Control.cpp" />
+    <ClCompile Include="..\gcv_games\Crysis.cpp" />
+    <ClCompile Include="..\gcv_games\Cyberpunk2077.cpp" />
+    <ClCompile Include="..\gcv_games\DishonoredDOTO.cpp" />
+    <ClCompile Include="..\gcv_games\game_interface.cpp" />
+    <ClCompile Include="..\gcv_games\game_interface_factory.cpp" />
+    <ClCompile Include="..\gcv_games\game_with_camera_data_in_one_dll.cpp" />
+    <ClCompile Include="..\gcv_games\GTAV.cpp" />
+    <ClCompile Include="..\gcv_games\HorizonZeroDawn.cpp" />
+    <ClCompile Include="..\gcv_games\ResidentEvils.cpp" />
+    <ClCompile Include="..\gcv_games\Witcher3.cpp" />
+    <ClCompile Include="..\gcv_utils\camera_data_struct.cpp" />
+    <ClCompile Include="..\gcv_utils\depth_utils.cpp" />
+    <ClCompile Include="..\gcv_utils\geometry.cpp" />
+    <ClCompile Include="..\gcv_utils\image_queue_entry.cpp" />
+    <ClCompile Include="..\gcv_utils\log_queue_thread_safe.cpp" />
+    <ClCompile Include="..\gcv_utils\memread.cpp" />
+    <ClCompile Include="..\gcv_utils\miscutils.cpp" />
+    <ClCompile Include="..\gcv_utils\scan_for_camera_matrix.cpp" />
+    <ClCompile Include="..\gcv_utils\simple_packed_buf.cpp" />
+    <ClCompile Include="..\render_target_stats\render_target_stats_tracking.cpp" />
+    <ClCompile Include="..\segmentation\buffer_indexing_colorization.cpp" />
+    <ClCompile Include="..\segmentation\reshade_hooks.cpp" />
+    <ClCompile Include="..\segmentation\semseg_shader_register_bind.cpp" />
+    <ClCompile Include="ffmpeg_pipe_win.cpp" />
+    <ClCompile Include="grabbers.cpp" />
+    <ClCompile Include="hud_renderer.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="copy_texture_into_packedbuf.cpp" />
+    <ClCompile Include="image_writer_thread_pool.cpp" />
+    <ClCompile Include="recorder.cpp" />
+    <ClCompile Include="tex_buffer_utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\3rdparty\cnpy.h" />
+    <ClInclude Include="..\3rdparty\concurrentqueue.h" />
+    <ClInclude Include="..\3rdparty\fpzip\codec.h" />
+    <ClInclude Include="..\3rdparty\fpzip\fpe.h" />
+    <ClInclude Include="..\3rdparty\fpzip\fpzip.h" />
+    <ClInclude Include="..\3rdparty\fpzip\front.h" />
+    <ClInclude Include="..\3rdparty\fpzip\pccodec.h" />
+    <ClInclude Include="..\3rdparty\fpzip\pcdecoder.h" />
+    <ClInclude Include="..\3rdparty\fpzip\pcencoder.h" />
+    <ClInclude Include="..\3rdparty\fpzip\pcmap.h" />
+    <ClInclude Include="..\3rdparty\fpzip\rcdecoder.h" />
+    <ClInclude Include="..\3rdparty\fpzip\rcencoder.h" />
+    <ClInclude Include="..\3rdparty\fpzip\rcmodel.h" />
+    <ClInclude Include="..\3rdparty\fpzip\rcqsmodel.h" />
+    <ClInclude Include="..\3rdparty\fpzip\read.h" />
+    <ClInclude Include="..\3rdparty\fpzip\types.h" />
+    <ClInclude Include="..\3rdparty\fpzip\write.h" />
+    <ClInclude Include="..\3rdparty\stb_image_write.h" />
+    <ClInclude Include="..\gcv_games\Control.h" />
+    <ClInclude Include="..\gcv_games\Crysis.h" />
+    <ClInclude Include="..\gcv_games\Cyberpunk2077.h" />
+    <ClInclude Include="..\gcv_games\DishonoredDOTO.h" />
+    <ClInclude Include="..\gcv_games\game_interface_factory.h" />
+    <ClInclude Include="..\gcv_games\game_interface.h" />
+    <ClInclude Include="..\gcv_games\game_interface_factory_registration.h" />
+    <ClInclude Include="..\gcv_games\game_with_camera_data_in_one_dll.h" />
+    <ClInclude Include="..\gcv_games\GTAV.h" />
+    <ClInclude Include="..\gcv_games\HorizonZeroDawn.h" />
+    <ClInclude Include="..\gcv_games\ResidentEvils.h" />
+    <ClInclude Include="..\gcv_games\Witcher3.h" />
+    <ClInclude Include="..\gcv_utils\assert_utils.hpp" />
+    <ClInclude Include="..\gcv_utils\camera_data_struct.h" />
+    <ClInclude Include="..\gcv_utils\depth_utils.h" />
+    <ClInclude Include="..\gcv_utils\geometry.h" />
+    <ClInclude Include="..\gcv_utils\image_queue_entry.h" />
+    <ClInclude Include="..\gcv_utils\log_queue_thread_safe.h" />
+    <ClInclude Include="..\gcv_utils\memread.h" />
+    <ClInclude Include="..\gcv_utils\miscutils.h" />
+    <ClInclude Include="..\gcv_utils\scan_for_camera_matrix.h" />
+    <ClInclude Include="..\gcv_utils\scripted_cam_buf_templates.h" />
+    <ClInclude Include="..\gcv_utils\simple_packed_buf.h" />
+    <ClInclude Include="..\gcv_utils\typed_2d_array.hpp" />
+    <ClInclude Include="..\render_target_stats\clicked_rgb_rendertargets.hpp" />
+    <ClInclude Include="..\render_target_stats\render_target_stats_tracking.hpp" />
+    <ClInclude Include="..\render_target_stats\reshade_tex_format_info.hpp" />
+    <ClInclude Include="..\segmentation\buffer_indexing_colorization.hpp" />
+    <ClInclude Include="..\segmentation\colormap_util.hpp" />
+    <ClInclude Include="..\segmentation\command_list_state.hpp" />
+    <ClInclude Include="..\segmentation\reshade_graphics_api_util.hpp" />
+    <ClInclude Include="..\segmentation\reshade_hooks.hpp" />
+    <ClInclude Include="..\segmentation\resource_helper.hpp" />
+    <ClInclude Include="..\segmentation\semseg_shader_register_bind.hpp" />
+    <ClInclude Include="..\segmentation\segmentation_app_data.hpp" />
+    <ClInclude Include="..\segmentation\draws_counting_data_buffer.hpp" />
+    <ClInclude Include="..\segmentation\shader_types.hpp" />
+    <ClInclude Include="ffmpeg_pipe_win.h" />
+    <ClInclude Include="generic_depth_struct.h" />
+    <ClInclude Include="grabbers.h" />
+    <ClInclude Include="hud_renderer.h" />
+    <ClInclude Include="image_writer_thread_pool.h" />
+    <ClInclude Include="copy_texture_into_packedbuf.h" />
+    <ClInclude Include="recorder.h" />
+    <ClInclude Include="tex_buffer_utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\3rdparty\fpzip\fpe.inl" />
+    <None Include="..\3rdparty\fpzip\pccodec.inl" />
+    <None Include="..\3rdparty\fpzip\pcdecoder.inl" />
+    <None Include="..\3rdparty\fpzip\pcencoder.inl" />
+    <None Include="..\3rdparty\fpzip\pcmap.inl" />
+    <None Include="..\3rdparty\fpzip\rcdecoder.inl" />
+    <None Include="..\3rdparty\fpzip\rcencoder.inl" />
+    <None Include="..\3rdparty\fpzip\rcqsmodel.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\renderdoc\renderdoc.vcxproj">
+      <Project>{911f2f55-1e66-4ff7-a8d5-cff63acd1e3b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\segmentation_shadering\segmentation_shadering.vcxproj">
+      <Project>{052290ab-95e0-4340-830a-3e7fdb28f976}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

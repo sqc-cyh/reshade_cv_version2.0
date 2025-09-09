@@ -1,0 +1,13 @@
+{
+    "intercept_shader_ids": [
+      {
+        "vs": 4326271832823995146,
+        "ps": 5276930713730860065
+      }
+      // 如果有其他需要拦截的玻璃类型，可以继续在这里添加
+      // ,{
+      //   "vs": ANOTHER_VERTEX_SHADER_ID,
+      //   "ps": ANOTHER_PIXEL_SHADER_ID
+      // }
+    ]
+  }

@@ -1,0 +1,379 @@
+// Copyright (C) 2023 Jason Bunk
+#include <imgui.h> // must be included before reshade.hpp
+#include <reshade.hpp>
+#include "gcv_reshade/generic_depth_struct.h"
+#include "render_target_stats/clicked_rgb_rendertargets.hpp"
+#include "segmentation_app_data.hpp"
+#include "semseg_shader_register_bind.hpp"
+#include "command_list_state.hpp"
+#include "buffer_indexing_colorization.hpp"
+// === [ADD] 头文件 ===
+#include <filesystem>
+#include <fstream>
+#include <nlohmann/json.hpp>
+#ifdef _WIN32
+  #include <Windows.h>
+#endif
+
+// === [ADD] 获取“游戏可执行文件所在目录”的工具函数 ===
+static std::filesystem::path get_game_dir()
+{
+#ifdef _WIN32
+    char buf[MAX_PATH] = {0};
+    DWORD n = GetModuleFileNameA(nullptr, buf, MAX_PATH); // nullptr => 当前进程 EXE
+    if (n == 0 || n >= MAX_PATH) return std::filesystem::current_path();
+    std::filesystem::path exe = std::filesystem::path(buf);
+    return exe.parent_path();
+#else
+    return std::filesystem::current_path();
+#endif
+}
+
+static bool is_glassmask_enabled(reshade::api::effect_runtime* rt) {
+    using namespace reshade::api;
+    if (auto t = rt->find_technique("glassmask.fx", "GlassMask"); t.handle != 0ull)
+        return rt->get_technique_state(t);
+    return false;
+}
+
+bool segmentation_app_data::load_glass_ids_json(const std::string& path) {
+    std::ifstream f(path);
+    if (!f) return false;
+    nlohmann::json j; try { f >> j; } catch (...) { return false; }
+
+    glass_ids.clear();
+    if (j.contains("ShaderIDs")) {
+        for (auto &s : j["ShaderIDs"]) {
+            if (s.is_string()) {
+                std::string str = s.get<std::string>();
+                auto pos = str.find('_');
+                if (pos == std::string::npos) continue;
+                auto trim0x = [](std::string v)->std::string {
+                    if (v.rfind("0x", 0) == 0 || v.rfind("0X", 0) == 0) return v.substr(2);
+                    return v;
+                };
+                std::string hi_s = trim0x(str.substr(0, pos));
+                std::string lo_s = trim0x(str.substr(pos + 1));
+                uint64_t hi = 0, lo = 0;
+                try { hi = std::stoull(hi_s, nullptr, 16); lo = std::stoull(lo_s, nullptr, 16); }
+                catch (...) { try { hi = std::stoull(hi_s, nullptr, 10); lo = std::stoull(lo_s, nullptr, 10); } catch (...) { continue; } }
+                glass_ids.emplace(hi, lo);
+            } else if (s.is_array() && s.size() == 2) {
+                try { glass_ids.emplace(s[0].get<uint64_t>(), s[1].get<uint64_t>()); } catch (...) {}
+            }
+        }
+    }
+	glass_ps_hashes.clear();
+	if (j.contains("PSHashes")) {
+	for (auto &h : j["PSHashes"]) {
+		try {
+		if (h.is_string()) {
+			std::string s = h.get<std::string>();
+			if (s.rfind("0x",0)==0 || s.rfind("0X",0)==0) glass_ps_hashes.insert(std::stoull(s.substr(2), nullptr, 16));
+			else                                         glass_ps_hashes.insert(std::stoull(s,       nullptr, 10));
+		} else {
+			glass_ps_hashes.insert(h.get<uint64_t>());
+		}
+		} catch (...) {}
+	}
+	}
+    return !glass_ids.empty();
+}
+
+static void on_device_init(reshade::api::device* device) {
+    auto& mapp = device->create_private_data<segmentation_app_data>();
+
+    // 从 <游戏.exe 同目录>\glass_ids.json 读取白名单（存在时加载）
+    try {
+        const auto p = get_game_dir() / "glass_ids.json";
+        if (std::filesystem::exists(p)) {
+            if (mapp.load_glass_ids_json(p.string())) {
+                reshade::log_message(reshade::log_level::info,
+                    (std::string("Loaded glass_ids.json from ") + p.string()).c_str());
+            } else {
+                reshade::log_message(reshade::log_level::warning,
+                    (std::string("Failed to parse glass_ids.json at ") + p.string()).c_str());
+            }
+        }
+    } catch (...) {
+        reshade::log_message(reshade::log_level::warning, "Exception when loading glass_ids.json");
+    }
+}
+
+
+static void on_device_destroy(reshade::api::device* device) {
+	{
+		auto& mapp = device->get_private_data<segmentation_app_data>();
+		mapp.r_accum_bonus.delete_resource(device);
+		mapp.r_counter_buf.delete_resource(device);
+	}
+	device->destroy_private_data<segmentation_app_data>();
+}
+static void on_init_command_list(reshade::api::command_list* cmd_list) {
+	cmd_list->create_private_data<segmentation_app_cmdlist_state>();
+}
+static void on_destroy_command_list(reshade::api::command_list* cmd_list) {
+	cmd_list->destroy_private_data<segmentation_app_cmdlist_state>();
+}
+static void on_reset_cmdlist(reshade::api::command_list* cmd_list) {
+	auto& state = cmd_list->get_private_data<segmentation_app_cmdlist_state>();
+	state.reset_cmdlist();
+}
+
+static void on_bind_pipeline(reshade::api::command_list* cmd_list, reshade::api::pipeline_stage stages, reshade::api::pipeline pipeline) {
+	auto& state = cmd_list->get_private_data<segmentation_app_cmdlist_state>();
+	state.pipelines[stages] = pipeline;
+}
+
+
+static void on_bind_render_targets_and_depth_stencil(reshade::api::command_list* cmd_list, uint32_t count, const reshade::api::resource_view* rtvs, reshade::api::resource_view dsv) {
+	auto& cmdlst_state = cmd_list->get_private_data<segmentation_app_cmdlist_state>();
+	cmdlst_state.reset_binding_of_bonus_rtv();
+	cmdlst_state.rtvs.assign(rtvs, rtvs + count);
+	cmdlst_state.dsv = dsv;
+}
+
+// 记录当前绑定的 Index Buffer
+// 替换你现有的 on_bind_vertex_buffers（删掉最后一个参数）
+static void on_bind_vertex_buffers(reshade::api::command_list* cmd,
+                                   uint32_t first, uint32_t count,
+                                   const reshade::api::resource* bufs,
+                                   const uint64_t* /*offsets*/,
+                                   const uint32_t* /*strides*/)
+{
+    auto &st = cmd->get_private_data<segmentation_app_cmdlist_state>();
+    for (uint32_t i = 0; i < count && (first + i) < st.vertex_buffers.size(); ++i)
+        st.vertex_buffers[first + i] = bufs[i];
+}
+
+
+// 记录当前绑定的 Vertex Buffers（slot 范围内逐一保存）
+static void on_bind_vertex_buffers(reshade::api::command_list* cmd,
+                                   uint32_t first, uint32_t count,
+                                   const reshade::api::resource* bufs,
+                                   const uint64_t* /*offsets*/,
+                                   const uint32_t* /*strides*/,
+                                   const uint32_t* /*types_or_null*/)
+{
+    auto &st = cmd->get_private_data<segmentation_app_cmdlist_state>();
+    for (uint32_t i = 0; i < count && (first + i) < st.vertex_buffers.size(); ++i)
+        st.vertex_buffers[first + i] = bufs[i];
+}
+
+
+template<bool draw_is_indexed>
+bool segmapp_on_draw_plain_or_indexed(reshade::api::command_list* cmd_list, uint32_t vertices_per_instance, uint32_t instance_count, uint32_t first_index, int32_t vertex_offset, uint32_t first_instance) {
+	auto& cmdlst_state = cmd_list->get_private_data<segmentation_app_cmdlist_state>();
+	{
+		auto* device = cmd_list->get_device();
+		auto& mapp   = device->get_private_data<segmentation_app_data>();
+
+		if (mapp.glassmask_on && !mapp.glass_ids.empty()
+			&& vertices_per_instance > 1
+			&& !cmdlst_state.rtvs.empty()
+			&& cmdlst_state.rtvs[0].handle != 0ull
+			&& cmdlst_state.dsv.handle  != 0ull)
+		{
+			const auto curr_rt_res = device->get_resource_from_view(cmdlst_state.rtvs[0]);
+			const auto curr_ds_res = device->get_resource_from_view(cmdlst_state.dsv);
+
+			// 仅在“呈现到屏幕的 RT/Depth 配对”时才考虑拦截（与工程既有约定一致）
+			const bool on_present_targets =
+				mapp.rsrcs_of_presented_rgb.count(curr_rt_res.handle) &&
+				(curr_ds_res == mapp.rsrc_of_presented_depth);
+
+			if (on_present_targets) {
+				// 跳过全屏清屏/后处理，避免误吞导致黑屏
+				const bool is_fullscreen_like = (vertices_per_instance <= 6 && instance_count <= 1);
+				if (!is_fullscreen_like) {
+					// 不拦截写入我们自己的 bonus RTV 的 draw，避免干扰 segmentation 的旁路采集
+					const bool drawing_to_bonus_rtv = (curr_rt_res == mapp.r_accum_bonus.rsc);
+					if (!drawing_to_bonus_rtv) {
+						auto meta = get_draw_metadata_including_shader_info(device, cmd_list, vertices_per_instance);
+						const uint64_t hi = meta[1], lo = meta[2];
+						uint64_t ps_hash = 0;
+						auto pit = mapp.pipeline_handle_to_pixel_shader_hash.find(
+							cmdlst_state.pipelines[reshade::api::pipeline_stage::pixel_shader].handle);
+						if (pit != mapp.pipeline_handle_to_pixel_shader_hash.end()) ps_hash = pit->second;
+
+						// 是否“疑似全屏”pass（清屏/后处理）
+						const bool is_fullscreen_like = (vertices_per_instance <= 6 && instance_count <= 1);
+
+						// 命中规则：
+						// 1) 非全屏：用 (hi,lo) 命中 → 吞
+						// 2) 全屏：仅当 PSHash 命中 → 吞（避免误杀最终合成）
+						const bool id_hit = (mapp.glass_ids.find({hi, lo}) != mapp.glass_ids.end());
+						const bool ps_hit = (ps_hash != 0 && mapp.glass_ps_hashes.count(ps_hash) != 0);
+
+						if ((!is_fullscreen_like && id_hit) || (is_fullscreen_like && ps_hit)) {
+							return true; // 去掉该条“玻璃”绘制
+						}
+					}
+				}
+			}
+		}
+	}
+	if (vertices_per_instance > 1 && !cmdlst_state.rtvs.empty() && cmdlst_state.rtvs[0].handle != 0ull && cmdlst_state.dsv.handle != 0ull) {
+		reshade::api::device* const device = cmd_list->get_device();
+		auto& mapp = device->get_private_data<segmentation_app_data>();
+		if (mapp.do_intercept_draw && mapp.r_accum_bonus.is_valid() && mapp.r_counter_buf.is_valid()) {
+			const reshade::api::resource currst0rsrc = device->get_resource_from_view(cmdlst_state.rtvs[0]);
+			const reshade::api::resource currdepthrc = device->get_resource_from_view(cmdlst_state.dsv);
+			if (mapp.rsrcs_of_presented_rgb.count(currst0rsrc.handle) && currdepthrc == mapp.rsrc_of_presented_depth) {
+				// guess whether it is a fullscreen clear draw... this may miss some actual 3D objects with 6 vertices that appear once on screen
+				const bool is_fullscreen_draw = (vertices_per_instance <= 6 && instance_count <= 1); //&& cmdlst_state.first_draw_since_bind);
+				if (is_fullscreen_draw) {
+					cmdlst_state.unbind_bonus_rtv(cmd_list);
+				} else {
+					if (cmdlst_state.bind_bonus_rtv_if_not_bound(cmd_list, mapp.r_accum_bonus.rtv)) {
+						if (!mapp.r_accum_bonus.iscleared.exchange(1)) {
+							cmd_list->clear_render_target_view(mapp.r_accum_bonus.rtv, mapp.r_accum_bonus.clear_color);
+						}
+					}
+					reshade::api::resource_view bindme_bonusbufview = mapp.r_counter_buf.stash_metadata_and_get_view_for_draw(get_draw_metadata_including_shader_info(device, cmd_list, vertices_per_instance));
+					const auto &st = cmd_list->get_private_data<segmentation_app_cmdlist_state>();
+					mapp.per_draw_ib_vb.emplace_back(st.index_buffer.handle, st.vertex_buffers[0].handle);
+
+
+					uint64_t oldrsc = 0ull;
+					if (pipeline_bind_bonus_tex_for_a_draw(device, cmd_list, mapp, bindme_bonusbufview, oldrsc)) {
+						if (draw_is_indexed) cmd_list->draw_indexed(vertices_per_instance, instance_count, first_index, vertex_offset, first_instance);
+						else cmd_list->draw(vertices_per_instance, instance_count, first_index, first_instance);
+						uint64_t tmp;
+						pipeline_bind_bonus_tex_for_a_draw(device, cmd_list, mapp, { oldrsc }, tmp);
+						return true; // we just did our own draw, so skip what it would have done
+					}
+				}
+			}
+		}
+	}
+	//cmdlst_state.first_draw_since_bind = false;
+	return false; // resume normal draw
+}
+
+static bool on_draw(reshade::api::command_list* cmd_list, uint32_t vertices, uint32_t instances, uint32_t first_vertex, uint32_t first_instance) {
+	return segmapp_on_draw_plain_or_indexed<false>(cmd_list, vertices, instances, first_vertex, 0, first_instance);
+}
+// index_count == vertices == The number of indices read from the index buffer for each instance.
+static bool on_draw_indexed(reshade::api::command_list* cmd_list, uint32_t vertices_per_instance, uint32_t instance_count, uint32_t first_index, int32_t vertex_offset, uint32_t first_instance) {
+	return segmapp_on_draw_plain_or_indexed<true>(cmd_list, vertices_per_instance, instance_count, first_index, vertex_offset, first_instance);
+}
+// TODO
+//static bool on_draw_or_dispatch_indirect(reshade::api::command_list* cmd_list, reshade::api::indirect_command type, reshade::api::resource buffer, uint64_t offset, uint32_t draw_count, uint32_t stride) {
+//	return false;
+//}
+
+static bool set_or_resize_app_texture(segmentation_app_data& mapp, reshade::api::effect_runtime* runtime,
+		reshade::api::device* device, std::unordered_set<uint64_t> texs_rgb_handles, reshade::api::resource tex_depth)
+{
+	if (texs_rgb_handles.empty() || tex_depth.handle == 0ull)
+		return false;
+	for (const auto& th : texs_rgb_handles)
+		if (th == 0ull) return false;
+
+	mapp.rsrcs_of_presented_rgb.clear();
+	for (const auto& th : texs_rgb_handles)
+		mapp.rsrcs_of_presented_rgb.insert(th);
+	mapp.rsrc_of_presented_depth = tex_depth;
+
+	reshade::api::resource_desc depthdesc = device->get_resource_desc(tex_depth);
+	mapp.r_accum_bonus.create_or_resize_texture(device, depthdesc.texture.width, depthdesc.texture.height,
+			reshade::api::format::r32g32b32a32_uint, reshade::api::resource_usage::render_target);
+	return true;
+}
+
+bool segmentation_app_update_on_finish_effects(reshade::api::effect_runtime* runtime, bool requested_draw) {
+	reshade::api::device* const device = runtime->get_device();
+	if (device->get_api() != reshade::api::device_api::d3d10 && device->get_api() != reshade::api::device_api::d3d11) return requested_draw;
+	auto& mapp = device->get_private_data<segmentation_app_data>();
+	auto& clicked = device->get_private_data<clicked_rgb_rendertargets>();
+	if (mapp.save_buf_tex_at_end_of_draw) {
+		mapp.save_buf_tex_at_end_of_draw = false;
+		return true;
+	} 
+	
+	// 检查实时可视化着色器是否启用
+    reshade::api::effect_technique seg_viz_tech = runtime->find_technique("segmentation_visualization.fx", "SemSegView");
+    bool seg_viz_enabled = seg_viz_tech.handle != 0ull && runtime->get_technique_state(seg_viz_tech);
+
+	if (requested_draw || seg_viz_enabled) {
+        if (clicked.clicked_resources.empty()) {
+            if (requested_draw) { // 只在F11时提示
+                reshade::log_message(reshade::log_level::info, "warning: cant capture because no RGB render target resources clicked!");
+            }
+        } else {
+            if (set_or_resize_app_texture(mapp, runtime, device, clicked.clicked_resources, runtime->get_private_data<generic_depth_data>().selected_depth_stencil)) {
+                mapp.do_intercept_draw = true; // 激活拦截
+                if (requested_draw) {
+                    mapp.r_accum_bonus.iscleared.store(0);
+                    reshade::log_message(reshade::log_level::info, "user pressed <CAPTURE>");
+                    mapp.save_buf_tex_at_end_of_draw = true;
+                }
+            } else {
+                if (requested_draw) {
+                    reshade::log_message(reshade::log_level::info, "do_intercept_draw ignored due to failed texture init!");
+                }
+            }
+        }
+    } else {
+        // 如果两个条件都不满足，确保拦截是关闭的
+        mapp.do_intercept_draw = false;
+    }
+	return false;
+}
+
+static void on_reshade_finish_effects(reshade::api::effect_runtime* runtime,
+	reshade::api::command_list* cmd_list, reshade::api::resource_view rtv, reshade::api::resource_view rtv_srgb)
+{
+	reshade::api::device* const device = runtime->get_device();
+	auto& mapp = device->get_private_data<segmentation_app_data>();
+	mapp.r_counter_buf.create_buffer(device);
+	//mapp.r_counter_buf.reset_at_end_of_frame(); // moved to main app
+	mapp.glassmask_on = is_glassmask_enabled(runtime);
+	mapp.per_draw_ib_vb_reset();
+}
+
+
+void register_segmentation_app_hooks() {
+	reshade::register_event<reshade::addon_event::init_device>(on_device_init);
+	reshade::register_event<reshade::addon_event::destroy_device>(on_device_destroy);
+	reshade::register_event<reshade::addon_event::init_command_list>(on_init_command_list);
+	reshade::register_event<reshade::addon_event::destroy_command_list>(on_destroy_command_list);
+
+	reshade::register_event<reshade::addon_event::bind_pipeline>(on_bind_pipeline);
+	reshade::register_event<reshade::addon_event::bind_render_targets_and_depth_stencil>(on_bind_render_targets_and_depth_stencil);
+
+	reshade::register_event<reshade::addon_event::create_pipeline>(on_create_pipeline_add_semseg);
+	reshade::register_event<reshade::addon_event::init_pipeline>(on_after_create_pipeline_register_semseg);
+
+	reshade::register_event<reshade::addon_event::draw>(on_draw);
+	reshade::register_event<reshade::addon_event::draw_indexed>(on_draw_indexed);
+
+	reshade::register_event<reshade::addon_event::reshade_begin_effects>(custom_shader_buffer_visualization_on_reshade_begin_effects);
+	reshade::register_event<reshade::addon_event::reshade_finish_effects>(on_reshade_finish_effects);
+
+	reshade::register_event<reshade::addon_event::bind_index_buffer>(on_bind_index_buffer);
+    reshade::register_event<reshade::addon_event::bind_vertex_buffers>(on_bind_vertex_buffers);
+}
+
+void unregister_segmentation_app_hooks() {
+	reshade::unregister_event<reshade::addon_event::init_device>(on_device_init);
+	reshade::unregister_event<reshade::addon_event::destroy_device>(on_device_destroy);
+	reshade::unregister_event<reshade::addon_event::init_command_list>(on_init_command_list);
+	reshade::unregister_event<reshade::addon_event::destroy_command_list>(on_destroy_command_list);
+
+	reshade::unregister_event<reshade::addon_event::bind_pipeline>(on_bind_pipeline);
+	reshade::unregister_event<reshade::addon_event::bind_render_targets_and_depth_stencil>(on_bind_render_targets_and_depth_stencil);
+
+	reshade::unregister_event<reshade::addon_event::create_pipeline>(on_create_pipeline_add_semseg);
+	reshade::unregister_event<reshade::addon_event::init_pipeline>(on_after_create_pipeline_register_semseg);
+
+	reshade::unregister_event<reshade::addon_event::draw>(on_draw);
+	reshade::unregister_event<reshade::addon_event::draw_indexed>(on_draw_indexed);
+
+	reshade::unregister_event<reshade::addon_event::reshade_begin_effects>(custom_shader_buffer_visualization_on_reshade_begin_effects);
+	reshade::unregister_event<reshade::addon_event::reshade_finish_effects>(on_reshade_finish_effects);
+
+	reshade::unregister_event<reshade::addon_event::bind_index_buffer>(on_bind_index_buffer);
+    reshade::unregister_event<reshade::addon_event::bind_vertex_buffers>(on_bind_vertex_buffers);
+}

@@ -1,0 +1,40 @@
+#pragma once
+#include <reshade.hpp>
+#include <memory>
+#include <unordered_set>
+#include "glass_classifier.hpp"
+#include "d3d_pipeline_nop_cache.hpp"
+
+class GlassMaskSystem {
+public:
+  explicit GlassMaskSystem(reshade::api::device* dev, GlassClassifierConfig cfg);
+  ~GlassMaskSystem();
+
+  void install();
+  void uninstall();
+  void set_enabled(bool e) { enabled_ = e; }
+
+private:
+  bool should_suppress_current_draw(reshade::api::command_list* cmd,
+                                    reshade::api::pipeline pipeline,
+                                    uint32_t vertices_per_instance) const;
+
+  void on_bind_pipeline(reshade::api::command_list* cmd,
+                        reshade::api::pipeline_stage stages,
+                        reshade::api::pipeline pipeline);
+  void on_draw(reshade::api::command_list* cmd,
+             uint32_t vtx, uint32_t inst, uint32_t fv, uint32_t fi);
+  void on_draw_indexed(reshade::api::command_list* cmd,
+                     uint32_t idx, uint32_t inst, uint32_t fidx, int32_t voff, uint32_t fi);
+
+private:
+  reshade::api::device* dev_ = nullptr;
+  GlassClassifierConfig cfg_;
+  bool enabled_ = true;
+
+  std::unique_ptr<GlassClassifier> clf_;
+  NopPipelineCache nop_cache_;
+
+  reshade::api::pipeline current_pipeline_ = { 0 };
+  bool replaced_ = false;
+};

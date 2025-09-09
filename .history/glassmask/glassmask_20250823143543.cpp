@@ -1,0 +1,94 @@
+#include "glassmask.hpp"
+#include "glass_classifier.hpp"
+#include "d3d_pipeline_nop_cache.hpp"
+#include <cassert>
+using namespace reshade::api;
+
+static GlassMaskSystem* g_sys = nullptr;
+
+GlassMaskSystem::GlassMaskSystem(device* dev, GlassClassifierConfig cfg)
+  : dev_(dev), cfg_(std::move(cfg)) {
+  clf_ = std::make_unique<GlassClassifier>(dev_, cfg_);
+#if RESHADE_ADDON
+  if (dev_->get_api() == device_api::d3d12)
+    nop_cache_.dx12 = std::make_unique<D3D12NopPipelineCache>(dev_);
+  else if (dev_->get_api() == device_api::d3d11)
+    nop_cache_.dx11 = std::make_unique<D3D11NopPipelineCache>(dev_);
+#endif
+}
+GlassMaskSystem::~GlassMaskSystem(){ uninstall(); }
+
+void GlassMaskSystem::install() {
+  if (g_sys) return;
+  g_sys = this;
+
+  reshade::register_event<reshade::addon_event::bind_pipeline>(
+    +[](command_list* cmd, pipeline_stage stages, pipeline p) {
+      if (g_sys) g_sys->on_bind_pipeline(cmd, stages, p);
+    });
+
+  reshade::register_event<reshade::addon_event::draw>(
+    +[](command_list* cmd, primitive_topology tp,
+        uint32_t vtx, uint32_t inst, uint32_t fv, uint32_t fi) {
+      if (g_sys) g_sys->on_draw(cmd, tp, vtx, inst, fv, fi);
+    });
+
+  reshade::register_event<reshade::addon_event::draw_indexed>(
+    +[](command_list* cmd, primitive_topology tp,
+        uint32_t idx, uint32_t inst, uint32_t fidx, int32_t voff, uint32_t fi) {
+      if (g_sys) g_sys->on_draw_indexed(cmd, tp, idx, inst, fidx, voff, fi);
+    });
+}
+
+void GlassMaskSystem::uninstall() {
+  if (g_sys != this) return;
+  reshade::unregister_event<reshade::addon_event::bind_pipeline>();
+  reshade::unregister_event<reshade::addon_event::draw>();
+  reshade::unregister_event<reshade::addon_event::draw_indexed>();
+  g_sys = nullptr;
+}
+
+bool GlassMaskSystem::should_suppress_current_draw(command_list* cmd, pipeline p) const {
+  if (!enabled_ || p.handle == 0) return false;
+  return clf_->is_glass_draw(cmd, p);
+}
+
+void GlassMaskSystem::on_bind_pipeline(command_list* /*cmd*/,
+                                       pipeline_stage stages, pipeline p) {
+  if (stages != pipeline_stage::all) return;
+  current_pipeline_ = p;
+}
+
+static void replace_with_nop(command_list* cmd, pipeline orig,
+                             NopPipelineCache& cache, device_api api,
+                             bool& replaced) {
+  if (api == device_api::d3d12) {
+    auto nop = cache.dx12->get_or_create_nop_pipeline(orig);
+    if (nop.handle) { cmd->bind_pipeline(pipeline_stage::all, nop); replaced = true; }
+  } else if (api == device_api::d3d11) {
+    auto nop = cache.dx11->get_or_create_nop_pipeline(orig);
+    if (nop.handle) { cmd->bind_pipeline(pipeline_stage::all, nop); replaced = true; }
+  }
+}
+
+void GlassMaskSystem::on_draw(command_list* cmd, primitive_topology tp,
+                              uint32_t vtx, uint32_t inst,
+                              uint32_t fv, uint32_t fi) {
+  replaced_ = false;
+  if (should_suppress_current_draw(cmd, current_pipeline_)) {
+    replace_with_nop(cmd, current_pipeline_, nop_cache_, dev_->get_api(), replaced_);
+  }
+  cmd->draw(tp, vtx, inst, fv, fi);
+  if (replaced_) { cmd->bind_pipeline(pipeline_stage::all, current_pipeline_); replaced_ = false; }
+}
+
+void GlassMaskSystem::on_draw_indexed(command_list* cmd, primitive_topology tp,
+                                      uint32_t idx, uint32_t inst,
+                                      uint32_t fidx, int32_t voff, uint32_t fi) {
+  replaced_ = false;
+  if (should_suppress_current_draw(cmd, current_pipeline_)) {
+    replace_with_nop(cmd, current_pipeline_, nop_cache_, dev_->get_api(), replaced_);
+  }
+  cmd->draw_indexed(tp, idx, inst, fidx, voff, fi);
+  if (replaced_) { cmd->bind_pipeline(pipeline_stage::all, current_pipeline_); replaced_ = false; }
+}
