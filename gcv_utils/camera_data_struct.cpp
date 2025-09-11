@@ -1,32 +1,10 @@
+// Copyright (C) 2022 Jason Bunk
 #include "camera_data_struct.h"
-#include <vector>
-#include <string>
+#include <sstream>
+#include <iomanip>
 
-// 使用与 .h 文件一致的成员变量名
-void CamMatrixData::into_json(nlohmann::json & rj) const {
-    if (is_euler_format) {
-        rj["fov"] = fov_v_degrees; // 使用 fov_v_degrees
-        rj["aspect_ratio"] = aspect_ratio;
-        rj["location"] = {
-            {"x", pos.x}, 
-            {"y", pos.y}, 
-            {"z", pos.z}
-        };
-        rj["rotation"] = {
-            {"pitch", euler_deg.x}, 
-            {"roll", euler_deg.y}, 
-            {"yaw", euler_deg.z}
-        };
-    } else {
-        std::vector<double> flat_matrix;
-        flat_matrix.reserve(12);
-        for (int r = 0; r < 3; ++r) {
-            for (int c = 0; c < 4; ++c) {
-                // 使用 extrinsic_cam2world
-                flat_matrix.push_back(extrinsic_cam2world(r, c));
-            }
-        }
-        rj["extrinsic_cam2world"] = flat_matrix;
-        rj["fov_v_degrees"] = fov_v_degrees; // 使用 fov_v_degrees
-    }
+void CamMatrixData::into_json(nlohmann::json& rj) const {
+	rj[((extrinsic_status == CamMatrix_AllGood) ? "extrinsic_cam2world" : "extrinsic_WIP")] = cam_matrix_to_flattened_row_major_array(extrinsic_cam2world);
+	if (fov_v_degrees > ftype(0.0)) rj["fov_v_degrees"] = fov_v_degrees;
+	if (fov_h_degrees > ftype(0.0)) rj["fov_h_degrees"] = fov_h_degrees;
 }

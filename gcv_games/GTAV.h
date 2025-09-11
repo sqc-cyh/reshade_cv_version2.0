@@ -23,9 +23,6 @@ public:
     // 深度解释
     virtual bool  can_interpret_depth_buffer() const override;
     virtual float convert_to_physical_distance_depth_u64(uint64_t depthval) const override;
-
-private:
-    bool is_euler_format = false;
 };
 
 REGISTER_GAME_INTERFACE(GameGTAV, 0, "gta5.exe");
