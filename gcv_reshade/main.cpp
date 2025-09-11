@@ -37,6 +37,12 @@ static int  g_video_fps = 5;
 static std::unique_ptr<Recorder> g_rec;
 static std::string g_rec_dir;
 
+
+// 新增的、无FPS限制的同步录制模式
+static bool g_recording_synced_fullspeed = false;
+static std::string g_rec_dir_synced;
+
+
 static FILE* g_actions_csv = nullptr; 
 // It is only used to determine whether a header needs to be written. It is actually written in Recorder
 
@@ -80,6 +86,11 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 
         // start record
         if (ctrl_down && runtime->is_key_pressed(VK_F9) && !g_recording) {
+			if (g_recording_synced_fullspeed) { // 如果新模式在运行，先停止它
+				g_recording_synced_fullspeed = false;
+				if (g_rec) { g_rec->stop(); g_rec.reset(); }
+				reshade::log_message(reshade::log_level::info, "REC (Synced Full-Speed) stopped by new recording.");
+			}
             const std::string dirname = std::string("actions_") + get_datestr_yyyy_mm_dd() + "_" + std::to_string(now_us) + "/";
             g_rec_dir = shdata.output_filepath_creates_outdir_if_needed(dirname);
 
@@ -103,6 +114,30 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
             reshade::log_message(reshade::log_level::info, "REC stop");
         }
 
+		 // 新增的同步录制模式 (Ctrl+F7 / Ctrl+F8)
+		if (ctrl_down && runtime->is_key_pressed(VK_F7) && !g_recording_synced_fullspeed) {
+			if (g_recording) { // 如果旧模式在运行，先停止它
+				g_recording = false;
+				if (g_rec) { g_rec->stop(); g_rec.reset(); }
+				reshade::log_message(reshade::log_level::info, "REC (FPS-Limited) stopped by new recording.");
+			}
+			const std::string dirname = std::string("synced_") + get_datestr_yyyy_mm_dd() + "_" + std::to_string(now_us) + "/";
+			g_rec_dir_synced = shdata.output_filepath_creates_outdir_if_needed(dirname);
+			RecorderConfig cfg{ 60, g_rec_dir_synced, true }; // FPS参数仅用于最终视频编码，不影响捕获
+			g_rec = std::make_unique<Recorder>(cfg);
+			g_rec->start();
+			g_recording_synced_fullspeed = true;
+			g_rec_idx = 0;
+			g_copy_fail_in_row = 0;
+			reshade::log_message(reshade::log_level::info, ("REC (Synced Full-Speed) start: " + g_rec_dir_synced).c_str());
+		}
+		if (ctrl_down && runtime->is_key_pressed(VK_F8) && g_recording_synced_fullspeed) {
+			g_recording_synced_fullspeed = false;
+			if (g_rec) { g_rec->stop(); g_rec.reset(); }
+			reshade::log_message(reshade::log_level::info, "REC (Synced Full-Speed) stop");
+		}
+
+
         // recording
         if (g_recording) {
             const int fps = std::max(1, g_video_fps);
@@ -114,15 +149,6 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
             }
 
             if (now_us >= next_due_us) {
-                // int64_t behind = now_us - next_due_us;
-                // int need = 1 + (int)(behind / period_us);
-                // if (need > 8) need = 8;
-				
-				// const int64_t base_due = next_due_us;
-                // // 缓存上一帧相机 JSON，供抓帧失败时补写
-                // static Json s_last_camj;
-                // static bool s_has_camj = false;
-               
 			    // keyboard status
                	uint32_t keymask = 0;
 				if (GetAsyncKeyState('W') & 0x8000) keymask |= 1u << 0;
@@ -148,7 +174,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 						g_copy_fail_in_row = 0;
 						// hud::draw_keys_bgra(bgra.data(), w, h, keymask);
 						// 不画了
-						g_rec->push_color(bgra.data(), w, h);
+						// g_rec->push_color(bgra.data(), w, h);
 						color_ok = true;
 
 						// 相机（与该彩色帧/动作同 idx 与时间戳）
@@ -254,15 +280,72 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 					std::vector<uint8_t> gray; int dw=0, dh=0;
 					if (grab_depth_gray8(runtime->get_command_queue(), depth_res, gray, dw, dh, g_depth_tone)) {
 						// hud::draw_keys_gray(gray.data(), dw, dh, keymask);s
-						g_rec->push_depth(gray.data(), dw, dh);
+						// g_rec->push_depth(gray.data(), dw, dh);
 					}
 				}
 
 				next_due_us += period_us;
 				g_last_cap_us = now_us;
 			}
-			return;
+			// return;
 		}
+		 // 新增：同步全速录制逻辑
+		else if (g_recording_synced_fullspeed) {
+			// =================== SNAPSHOT PHASE ===================
+			uint32_t keymask = 0;
+			if (GetAsyncKeyState('W') & 0x8000) keymask |= 1u << 0;
+			if (GetAsyncKeyState('A') & 0x8000) keymask |= 1u << 1;
+			if (GetAsyncKeyState('S') & 0x8000) keymask |= 1u << 2;
+			if (GetAsyncKeyState('D') & 0x8000) keymask |= 1u << 3;
+			if (GetAsyncKeyState(VK_SHIFT) & 0x8000) keymask |= 1u << 4;
+			if (GetAsyncKeyState(VK_SPACE) & 0x8000) keymask |= 1u << 5;
+
+			CamMatrixData cam; std::string cam_err;
+			const auto cam_ok = shdata.get_camera_matrix(cam, cam_err);
+			const int64_t frame_id = now_us; // 重要：请替换为从您的Mod获取的真实ID
+
+			reshade::api::device* const dev = runtime->get_device();
+			reshade::api::command_queue* const q = runtime->get_command_queue();
+			const reshade::api::resource color_res = dev->get_resource_from_view(rtv);
+
+			simple_packed_buf rgb_buffer;
+			bool color_copy_ok = false;
+			if (color_res.handle != 0) {
+				if (shdata.copy_texture_to_cpu_buffer_sync(q, color_res, TexInterp_RGB, rgb_buffer)) {
+					color_copy_ok = true;
+					g_copy_fail_in_row = 0;
+				} else {
+					g_copy_fail_in_row++;
+					if (g_copy_fail_in_row >= g_copy_fail_stop_threshold) {
+						reshade::log_message(reshade::log_level::error, "copy failed too many times; stopping synced recording");
+						g_recording_synced_fullspeed = false;
+						if (g_rec) { g_rec->stop(); g_rec.reset(); }
+					}
+				}
+			}
+
+			// =================== PROCESSING PHASE ===================
+			if (color_copy_ok) {
+				char basebuf[512];
+				_snprintf_s(basebuf, _TRUNCATE, "%s/frame_%012lld", g_rec_dir_synced.c_str(), (long long)frame_id);
+				const std::string basefilen = std::string(basebuf);
+
+				shdata.queue_cpu_buffer_for_writing(basefilen + "_rgb", ImageWriter_STB_png, std::move(rgb_buffer));
+
+				Json camj;
+				if (cam_ok) {
+					cam.into_json(camj);
+				} else {
+					camj["cam_status"] = "uninitialized";
+					if (!cam_err.empty()) camj["err"] = cam_err;
+				}
+				g_rec->log_camera_json(frame_id, now_us, camj, rgb_buffer.width, rgb_buffer.height);
+				g_rec->log_action(frame_id, now_us, keymask);
+
+				++g_rec_idx;
+			}
+		}
+    
     }
 
     if (segmentation_app_update_on_finish_effects(runtime, runtime->is_key_pressed(VK_F11)))

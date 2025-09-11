@@ -162,6 +162,57 @@ bool image_writer_thread_pool::save_texture_image_needing_resource_barrier_copy(
 	return true;
 }
 
+// 新增：同步GPU到CPU复制函数的实现
+bool image_writer_thread_pool::copy_texture_to_cpu_buffer_sync(
+    reshade::api::command_queue* queue,
+    reshade::api::resource tex,
+    TextureInterpretation tex_interp,
+    simple_packed_buf& out_buffer)
+{
+    if (tex == 0) {
+        reshade::log_message(reshade::log_level::error, "texture null: failed to copy to cpu buffer");
+        return false;
+    }
+
+    init_in_game(); // 确保游戏接口已就绪
+
+    // 这个函数会同步地执行GPU复制并等待其完成
+    if (!copy_texture_image_needing_resource_barrier_into_packedbuf(
+                game, out_buffer, queue, tex, tex_interp, depth_settings)) {
+        return false;
+    }
+
+    return true;
+}
+
+// 新增：将CPU缓冲区入队的函数实现
+bool image_writer_thread_pool::queue_cpu_buffer_for_writing(
+    const std::string& base_filename,
+    uint64_t image_writers,
+    simple_packed_buf&& buffer_to_write)
+{
+    if (num_threads() == 0) change_num_threads(3);
+    if (num_threads() == 0) return false;
+
+    queue_item_image2write* qume = new queue_item_image2write(image_writers,
+        output_filepath_creates_outdir_if_needed(base_filename));
+    if (!qume) {
+        reshade::log_message(reshade::log_level::error, "failed to allocate new queue entry for cpu buffer");
+        return false;
+    }
+
+    // 使用 std::move 转移缓冲区的所有权，避免数据拷贝
+    qume->mybuf = std::move(buffer_to_write);
+
+    if (!images2writequeue.enqueue(qume)) {
+        reshade::log_message(reshade::log_level::error, "failed to enqueue cpu buffer");
+        delete qume;
+        return false;
+    }
+
+    return true;
+}
+
 bool image_writer_thread_pool::save_segmentation_app_indexed_image_needing_resource_barrier_copy(
 	const std::string& base_filename, reshade::api::command_queue* queue, nlohmann::json& metajson)
 {

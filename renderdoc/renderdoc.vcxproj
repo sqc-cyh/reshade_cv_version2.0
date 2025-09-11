@@ -118,7 +118,7 @@
       <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>F:\Visual_Studio\Repos\reshade-5.8.0\deps\imgui;F:\Visual_Studio\Repos\reshade-5.8.0\include;F:\Visual_Studio\Repos\reshade_cv;F:\Visual_Studio\Repos\reshade_cv\gcv_utils;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\reshade-5.8.0\deps\imgui;C:\Users\10762\Desktop\code\reshade-5.8.0\include;C:\Users\10762\Desktop\code\reshade_cv_v2;C:\Users\10762\Desktop\code\reshade_cv_v2\gcv_utils;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -135,7 +135,7 @@
       <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>F:\Visual_Studio\Repos\reshade-5.8.0\deps\imgui;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include;F:\Visual_Studio\Repos\reshade-5.8.0\include;F:\Visual_Studio\Repos\reshade_cv;F:\Visual_Studio\Repos\reshade_cv\gcv_utils;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\reshade-5.8.0\deps\imgui;C:\Users\10762\Desktop\codes\reshade-5.8.0\include;C:\Users\10762\Desktop\code\reshade_cv_v2;C:\Users\10762\Desktop\code\reshade_cv_v2\gcv_utils;C:\Users\10762\Desktop\code\vcpkg\installed\x64-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>

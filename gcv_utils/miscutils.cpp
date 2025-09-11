@@ -4,7 +4,7 @@
 #include <locale>
 #include <codecvt>
 #include <algorithm>
-
+#include <chrono>
 // https://stackoverflow.com/questions/215963/how-do-you-properly-use-widechartomultibyte
 std::string string_from_wstring(const std::wstring &wstr) {
 	if (wstr.empty()) return std::string();
@@ -66,7 +66,11 @@ std::string get_datestr_yyyy_mm_dd() {
 	sprintf_s(tmpbuf, 20, "%d-%02d-%02d", 1900 + gottime.tm_year, 1 + gottime.tm_mon, gottime.tm_mday);
 	return std::string(tmpbuf);
 }
-
+long long get_time_us() {
+    auto now = std::chrono::high_resolution_clock::now();
+    auto duration = now.time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+}
 #define hertsttbufsz 1023
 #define RETURNFAILST(xx) return std::string("failed: ") + xx
 

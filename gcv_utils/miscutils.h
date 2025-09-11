@@ -14,6 +14,7 @@ std::string lowercasenameofcurrentprocessexe();
 
 std::string get_datestr_yyyy_mm_dd();
 
+long long get_time_us();
 // return error string if test failed; empty string means ok
 std::string run_utils_tests();
 
