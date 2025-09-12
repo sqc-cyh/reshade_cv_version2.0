@@ -2,6 +2,7 @@
 #include "gcv_utils/image_queue_entry.h"
 #include <cnpy.h>
 #include <fpzip/fpzip.h>
+#include <fstream>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
@@ -110,6 +111,36 @@ bool save_packedbuf_f32_using_fpzip(const std::string &filepath,
 	return true;
 }
 
+bool save_packedbuf_to_epr(const std::string& filepath,
+    const simple_packed_buf& srcBuf, std::string& errstr) {
+    if (srcBuf.pixfmt != BUF_PIX_FMT_GRAYF32) {
+        errstr += "epr: only writes f32 depth data; refusing " + filepath;
+        return false;
+    }
+
+    std::ofstream ofs(filepath, std::ios::binary);
+    if (!ofs) {
+        errstr += "epr: failed to open file " + filepath;
+        return false;
+    }
+
+    // Write header: width and height
+    ofs.write(reinterpret_cast<const char*>(&srcBuf.width), sizeof(srcBuf.width));
+    ofs.write(reinterpret_cast<const char*>(&srcBuf.height), sizeof(srcBuf.height));
+
+    // Write pixel data
+    if (srcBuf.num_total_bytes() > 0) {
+        ofs.write(reinterpret_cast<const char*>(srcBuf.bytes.data()), srcBuf.num_total_bytes());
+    }
+
+    if (!ofs.good()) {
+        errstr += "epr: failed to write all data to " + filepath;
+        return false;
+    }
+    return true;
+}
+
+
 bool queue_item_image2write::write_to_disk(std::string &errstr) const {
 	if (writers == ImageWriter_none || writers >= ImageWriter_end) return false;
 	bool allgood = true;
@@ -140,5 +171,9 @@ bool queue_item_image2write::write_to_disk(std::string &errstr) const {
 		allgood &= save_packedbuf_f32_using_fpzip(filepath_noexten + std::string(".fpzip"),
 			mybuf, errstr);
 	}
+	 if (writers & ImageWriter_epr) {
+        allgood &= save_packedbuf_to_epr(filepath_noexten + std::string(".epr"),
+            mybuf, errstr);
+    }
 	return allgood;
 }

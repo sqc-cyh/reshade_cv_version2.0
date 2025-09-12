@@ -8,7 +8,8 @@ enum ImageWriterType {
 	ImageWriter_STB_png = (1 << 0),
 	ImageWriter_numpy   = (1 << 1),
 	ImageWriter_fpzip   = (1 << 2),
-	ImageWriter_end     = (1 << 3),
+	ImageWriter_epr     = (1 << 3),
+	ImageWriter_end     = (1 << 4),
 };
 
 struct queue_item_image2write {

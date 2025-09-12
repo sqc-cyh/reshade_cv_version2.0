@@ -50,19 +50,7 @@ public:
 		const std::string &base_filename, uint64_t image_writers,
 		reshade::api::command_queue *queue, reshade::api::resource tex,
 		TextureInterpretation tex_interp);
-	// 新增：同步地将GPU纹理复制到CPU侧的缓冲区中
-    bool copy_texture_to_cpu_buffer_sync(
-        reshade::api::command_queue* queue,
-        reshade::api::resource tex,
-        TextureInterpretation tex_interp,
-        simple_packed_buf& out_buffer);
 
-    // 新增：将一个已在CPU侧的缓冲区排队，以供后台线程写入硬盘
-    bool queue_cpu_buffer_for_writing(
-        const std::string& base_filename,
-        uint64_t image_writers,
-        simple_packed_buf&& buffer_to_write);
-		
 	bool save_segmentation_app_indexed_image_needing_resource_barrier_copy(
 		const std::string& base_filename, reshade::api::command_queue* queue, nlohmann::json & metajson);
 };
