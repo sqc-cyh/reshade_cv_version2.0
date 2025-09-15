@@ -21,3 +21,9 @@ bool grab_depth_gray8(reshade::api::command_queue* q,
                       std::vector<uint8_t>& out_gray,
                       int& w, int& h,
                       const DepthToneParams& p);
+
+bool grab_raw_depth_float32(reshade::api::command_queue* q,
+                            reshade::api::resource depth_tex,
+                            std::vector<float>& out_floats,
+                            int& w, int& h
+);

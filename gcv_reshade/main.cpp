@@ -28,11 +28,13 @@
 #include <ShlObj.h>
 #include <algorithm>
 #include <nlohmann/json.hpp>
+
+#include <cnpy.h>
 using Json = nlohmann::json_abi_v3_12_0::json;
 typedef std::chrono::steady_clock hiresclock;
 
 // ------------------ Global recording status ------------------
-static bool g_recording = false;
+static int g_recording_mode = 0; // 0: not recording, 1: depth mode, 2: controls mode
 static int  g_video_fps = 5;
 static std::unique_ptr<Recorder> g_rec;
 static std::string g_rec_dir;
@@ -79,32 +81,46 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
         const bool ctrl_down = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
 
         // start record
-        if (ctrl_down && runtime->is_key_pressed(VK_F9) && !g_recording) {
-            const std::string dirname = std::string("actions_") + get_datestr_yyyy_mm_dd() + "_" + std::to_string(now_us) + "/";
-            g_rec_dir = shdata.output_filepath_creates_outdir_if_needed(dirname);
+        if (ctrl_down && g_recording_mode == 0) {
+            bool start_rec = false;
+            if (runtime->is_key_pressed(VK_F9)) {
+                // Logic 1: 5fps, depth, rgb video, camera
+                g_recording_mode = 1;
+                g_video_fps = 16;
+                start_rec = true;
+            } else if (runtime->is_key_pressed(VK_F7)) {
+                // Logic 2: 16fps, rgb video, controls, camera
+                g_recording_mode = 2;
+                g_video_fps = 16;
+                start_rec = true;
+            }
 
-            RecorderConfig cfg{ g_video_fps, g_rec_dir, true }; // constructor init
-            g_rec = std::make_unique<Recorder>(cfg);
-            g_rec->start();
+            if (start_rec) {
+                const std::string dirname = std::string("actions_") + get_datestr_yyyy_mm_dd() + "_" + std::to_string(now_us) + "/";
+                g_rec_dir = shdata.output_filepath_creates_outdir_if_needed(dirname);
 
-            g_recording = true;
-            g_rec_idx = 0;
-            g_last_cap_us = 0;
-            g_copy_fail_in_row = 0;
+                RecorderConfig cfg{ g_video_fps, g_rec_dir, true }; // constructor init
+                g_rec = std::make_unique<Recorder>(cfg);
+                g_rec->start();
 
-            reshade::log_message(reshade::log_level::info, ("REC start: " + g_rec_dir).c_str());
+                g_rec_idx = 0;
+                g_last_cap_us = 0;
+                g_copy_fail_in_row = 0;
+
+                reshade::log_message(reshade::log_level::info, ("REC start (mode " + std::to_string(g_recording_mode) + "): " + g_rec_dir).c_str());
+            }
         }
 
         // stop record
-        if (ctrl_down && runtime->is_key_pressed(VK_F10) && g_recording) {
-            g_recording = false;
+        if (ctrl_down && (runtime->is_key_pressed(VK_F10) || runtime->is_key_pressed(VK_F8)) && g_recording_mode != 0) {
+            g_recording_mode = 0;
             if (g_rec) { g_rec->stop(); g_rec.reset(); }
             if (g_actions_csv) { fclose(g_actions_csv); g_actions_csv = nullptr; }
             reshade::log_message(reshade::log_level::info, "REC stop");
         }
 
         // recording
-        if (g_recording) {
+        if (g_recording_mode != 0) {
             const int fps = std::max(1, g_video_fps);
             const int64_t period_us = 1000000LL / fps;
             static int64_t next_due_us = 0;
@@ -165,34 +181,73 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 											/*time_us=*/now_us,
 											/*cam_json=*/camj,
 											/*img_w=*/w, /*img_h=*/h);
-						g_rec->log_action(g_rec_idx, now_us, keymask);
 
-						generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
-                        reshade::api::resource depth_res = genericdepdata.selected_depth_stencil;
-                        reshade::api::command_queue* const q2 = runtime->get_command_queue();
-                        if (depth_res.handle != 0) {
-                            char basebuf[512];
-                            _snprintf_s(basebuf, _TRUNCATE, "%s/frame_%06llu_",
-                                        g_rec_dir.c_str(), (unsigned long long)g_rec_idx);
-                            const std::string basefilen = std::string(basebuf);
+						if (g_recording_mode == 2) { // Logic 2: save control signals
+                            g_rec->log_action(g_rec_idx, now_us, keymask);
+                        }
 
-                            uint32_t writers = ImageWriter_epr;                // 生成 depth.epr
-                            // if (shdata.game_knows_depthbuffer()) {               // 生成 depth.fpzip
-                            //     writers |= ImageWriter_fpzip;
+						 if (g_recording_mode == 1) { // Logic 1: save depth data
+                            generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
+                            reshade::api::resource depth_res = genericdepdata.selected_depth_stencil;
+                            reshade::api::command_queue* const q2 = runtime->get_command_queue();
+                            // if (depth_res.handle != 0) {
+                            //     char basebuf[512];
+                            //     _snprintf_s(basebuf, _TRUNCATE, "%s/frame_%06llu_",
+                            //                 g_rec_dir.c_str(), (unsigned long long)g_rec_idx);
+                            //     const std::string basefilen = std::string(basebuf);
+
+                            //     uint32_t writers = ImageWriter_epr; // 生成 depth.epr
+                            //     const bool ok_depth =
+                            //         shdata.save_texture_image_needing_resource_barrier_copy(
+                            //             basefilen + "depth",
+                            //             writers,
+                            //             q2,
+                            //             depth_res,
+                            //             TexInterp_Depth);
+                            //     if (!ok_depth) {
+                            //         reshade::log_message(reshade::log_level::warning,
+                            //             "record: failed to save per-frame depth (.epr)");
+                            //     }
                             // }
-                            const bool ok_depth =
-                                shdata.save_texture_image_needing_resource_barrier_copy(
-                                    basefilen + "depth",
-                                    writers,
-                                    q2,
-                                    depth_res,
-                                    TexInterp_Depth);
-                            if (!ok_depth) {
-                                reshade::log_message(reshade::log_level::warning,
-                                    "record: failed to save per-frame depth (.epr/.fpzip)");
-                            }
-						}
-						 // 每帧深度
+
+                        	if (depth_res.handle != 0) {
+								char basebuf[512];
+								_snprintf_s(basebuf, _TRUNCATE, "%s/frame_%06llu_",
+											g_rec_dir.c_str(), (unsigned long long)g_rec_idx);
+								const std::string basefilen = std::string(basebuf);
+
+								uint32_t writers = ImageWriter_numpy;                // 生成 depth.npy
+								// if (shdata.game_knows_depthbuffer()) {               // 生成 depth.fpzip
+								// 	writers |= ImageWriter_fpzip;
+								// }
+								const bool ok_depth =
+									shdata.save_texture_image_needing_resource_barrier_copy(
+										basefilen + "depth",
+										writers,
+										q2,
+										depth_res,
+										TexInterp_Depth);
+								if (!ok_depth) {
+									reshade::log_message(reshade::log_level::warning,
+										"record: failed to save per-frame depth (.npy/.fpzip)");
+								}
+							}
+							// h5文件版本
+							// if (depth_res.handle != 0) {
+							// 	std::vector<float> depth_floats;
+							// 	int dw = 0, dh = 0;
+							// 	// 使用你刚写的 grab_raw_depth_float32
+							// 	if (grab_raw_depth_float32(q2, depth_res, depth_floats, dw, dh)) {
+							// 		g_copy_fail_in_row = 0;
+							// 		// 推送到 Recorder → 自动分组保存
+							// 		g_rec->push_raw_depth(depth_floats.data(), dw, dh, g_rec_idx, now_us);
+
+							// 	} else {
+							// 		g_copy_fail_in_row++;
+							// 	}
+							// }
+                        }
+						// 每帧深度
                         // generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
                         // reshade::api::resource depth_res = genericdepdata.selected_depth_stencil;
                         // reshade::api::command_queue* const q2 = runtime->get_command_queue();
@@ -265,21 +320,22 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 						reshade::log_message(reshade::log_level::warning, "stream copy to CPU failed");
 						if (g_copy_fail_in_row >= g_copy_fail_stop_threshold) {
 							reshade::log_message(reshade::log_level::error, "copy failed too many times; stop streaming");
-							g_recording = false;
+							g_recording_mode = 0;
 							if (g_rec) { g_rec->stop(); g_rec.reset(); }
 						}
 					}
 				}
 
-				generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
-				reshade::api::resource depth_res = genericdepdata.selected_depth_stencil;
-				if (depth_res.handle != 0) {
-					std::vector<uint8_t> gray; int dw=0, dh=0;
-					if (grab_depth_gray8(runtime->get_command_queue(), depth_res, gray, dw, dh, g_depth_tone)) {
-						// hud::draw_keys_gray(gray.data(), dw, dh, keymask);s
-						g_rec->push_depth(gray.data(), dw, dh);
-					}
-				}
+				// depth视频
+				// generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
+				// reshade::api::resource depth_res = genericdepdata.selected_depth_stencil;
+				// if (depth_res.handle != 0) {
+				// 	std::vector<uint8_t> gray; int dw=0, dh=0;
+				// 	if (grab_depth_gray8(runtime->get_command_queue(), depth_res, gray, dw, dh, g_depth_tone)) {
+				// 		// hud::draw_keys_gray(gray.data(), dw, dh, keymask);s
+				// 		g_rec->push_depth(gray.data(), dw, dh);
+				// 	}
+				// }
 
 				next_due_us += period_us;
 				g_last_cap_us = now_us;
@@ -345,7 +401,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 				capgood = false;
 			}
 		}
-		if (!g_recording) {
+		if (g_recording_mode == 0) {
 			if (shdata.save_texture_image_needing_resource_barrier_copy(basefilen + std::string("RGB"),
 				ImageWriter_STB_png, cmdqueue, device->get_resource_from_view(rtv), TexInterp_RGB))
 			{

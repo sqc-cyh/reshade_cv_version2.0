@@ -168,3 +168,59 @@ bool grab_depth_gray8(reshade::api::command_queue* q,
   }
 }
 
+
+
+bool grab_raw_depth_float32(
+    reshade::api::command_queue* q,
+    reshade::api::resource depth_tex,
+    std::vector<float>& out_floats,
+    int& w, int& h)
+{
+    if (!q || depth_tex.handle == 0) return false;
+
+    simple_packed_buf pbuf;
+    depth_tex_settings depth_cfg{};
+    
+    // 使用 TexInterp_Depth 或 TexInterp_DepthLinear
+    if (!copy_texture_image_needing_resource_barrier_into_packedbuf(
+            nullptr, pbuf, q, depth_tex, TexInterp_Depth, depth_cfg)) {
+        return false;
+    }
+
+    w = static_cast<int>(pbuf.width);
+    h = static_cast<int>(pbuf.height);
+    if (w <= 0 || h <= 0) return false;
+
+    const size_t num_pixels = (size_t)w * h;
+    out_floats.resize(num_pixels);
+
+    // 支持多种格式
+    if (pbuf.pixfmt == BUF_PIX_FMT_GRAYF32) {
+        // 直接拷贝
+        for (int y = 0; y < h; ++y) {
+            const float* src = pbuf.rowptr<float>(y);
+            std::memcpy(out_floats.data() + y * w, src, w * sizeof(float));
+        }
+        return true;
+    }
+    else if (pbuf.pixfmt == BUF_PIX_FMT_GRAYU32) {
+        // R32 深度（如线性深度）
+        for (int y = 0; y < h; ++y) {
+            const uint32_t* src = pbuf.rowptr<uint32_t>(y);
+            float* dst = out_floats.data() + y * w;
+            for (int x = 0; x < w; ++x) {
+                uint32_t u = src[x];
+                // 根据游戏调整解码方式
+                // 示例：直接转 float（如果是线性深度）
+                dst[x] = *reinterpret_cast<float*>(&u);
+            }
+        }
+        return true;
+    }
+    else {
+        // 打印实际格式，用于调试
+        reshade::log_message(reshade::log_level::warning,
+            ("grab_raw_depth_float32: unsupported pixfmt = " + std::to_string(pbuf.pixfmt)).c_str());
+        return false;
+    }
+}

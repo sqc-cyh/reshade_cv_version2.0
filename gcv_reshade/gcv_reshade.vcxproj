@@ -94,7 +94,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;xxhash.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;xxhash.lib;hdf5.lib;hdf5_cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)build\x64\$(Configuration)\;C:\Users\10762\Desktop\code\vcpkg\installed\x64-windows\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />

@@ -3,6 +3,9 @@
 #include <cstring>
 #include <ShlObj.h>
 #include <nlohmann/json.hpp>
+#include <mutex>
+#include <sstream>
+#include "H5Cpp.h"
 using Json = nlohmann::json_abi_v3_12_0::json;
 static inline std::string join_path_slash(std::string s) {
   if (!s.empty() && s.back()!='/' && s.back()!='\\') s.push_back('/');
@@ -16,11 +19,29 @@ static inline void ensure_dir_existsA(const std::string& dir) {
   SHCreateDirectoryExA(nullptr, d.c_str(), nullptr);  
 }
 
-Recorder::Recorder(const RecorderConfig& cfg): cfg_(cfg){
-  ring_c_.resize(cap_c_);
-  ring_d_.resize(cap_d_);
+Recorder::Recorder(const RecorderConfig& cfg)
+    : cfg_(cfg), group_counter_(0)
+{
+    InitializeCriticalSection(&depth_cs_);
+    ring_c_.resize(cap_c_);
+    ring_d_.resize(cap_d_);
+
+    // 启动 HDF5 写入线程
+    h5_thread_ = std::thread(&Recorder::h5_write_thread, this);
 }
-Recorder::~Recorder(){ stop(); }
+
+Recorder::~Recorder() {
+    // 停止 HDF5 线程
+    h5_thread_run_ = false;
+    h5_cv_.notify_one();
+    if (h5_thread_.joinable()) {
+        h5_thread_.join();
+    }
+
+    DeleteCriticalSection(&depth_cs_);
+    stop();
+}
+
 
 bool Recorder::start(){
   if (running_) return true;
@@ -71,6 +92,11 @@ void Recorder::stop(){
   pipe_c_.stop();
   pipe_d_.stop();
 
+  if (!depth_cache_.empty()) {
+      reshade::log_message(reshade::log_level::info,
+          "[CV Capture] Saving last partial depth group");
+      save_depth_group_to_h5();  // 即使不满 5 帧也保存
+  }
   if (csv_) { fclose(csv_); csv_ = nullptr; }
   if (cam_jsonl_.is_open()) { cam_jsonl_.close(); }
   char s[128];
@@ -147,6 +173,123 @@ void Recorder::push_depth(const uint8_t* gray,int w,int h){
   last_gray_.assign(gray, gray + (size_t)w*h);
   dw_=w; dh_=h;
 }
+
+void Recorder::push_raw_depth(const float* data, int width, int height, uint64_t frame_idx, int64_t timestamp_us){
+    if (!running_ || !data || width <= 0 || height <= 0) return;
+
+    const size_t num_pixels = (size_t)width * height;
+    std::vector<float> copy(data, data + num_pixels);
+
+    EnterCriticalSection(&depth_cs_);
+    depth_cache_.push_back({
+        std::move(copy),
+        width, height,
+        frame_idx,
+        timestamp_us
+    });
+
+    bool should_save = (depth_cache_.size() >= group_size_);
+    LeaveCriticalSection(&depth_cs_);
+
+    if (should_save) {
+        save_depth_group_to_h5();  // 现在是异步的！
+    }
+}
+
+
+void Recorder::save_depth_group_to_h5() {
+    if (depth_cache_.empty()) return;
+
+    EnterCriticalSection(&depth_cs_);
+
+    DepthGroup group;
+    group.T = depth_cache_.size();
+    group.H = depth_cache_[0].height;
+    group.W = depth_cache_[0].width;
+    group.frame_start = depth_cache_.front().frame_idx;
+    group.frame_end = depth_cache_.back().frame_idx;
+    group.ts_start = depth_cache_.front().timestamp_us;
+    group.ts_end = depth_cache_.back().timestamp_us;
+    group.group_id = group_counter_++;
+    group.out_dir = cfg_.out_dir;
+    group.fps = cfg_.fps;
+
+    group.all_data.reserve(group.T * group.H * group.W);
+    for (const auto& frame : depth_cache_) {
+        group.all_data.insert(group.all_data.end(), frame.data.begin(), frame.data.end());
+    }
+
+    depth_cache_.clear();
+    LeaveCriticalSection(&depth_cs_);
+
+    // 放入异步队列
+    {
+        std::lock_guard<std::mutex> lk(h5_mutex_);
+        h5_queue_.push(std::move(group));
+    }
+    h5_cv_.notify_one();
+}
+
+
+void Recorder::h5_write_thread() {
+    while (h5_thread_run_.load()) {
+        std::unique_lock<std::mutex> lk(h5_mutex_);
+        h5_cv_.wait(lk, [this] {
+            return !h5_queue_.empty() || !h5_thread_run_;
+        });
+
+        if (!h5_thread_run_ && h5_queue_.empty()) break;
+
+        DepthGroup group = std::move(h5_queue_.front());
+        h5_queue_.pop();
+        lk.unlock();
+
+        try {
+            std::stringstream ss;
+            ss << group.out_dir << "/depth_group_"
+               << std::setfill('0') << std::setw(6) << group.group_id << ".h5";
+
+            H5::H5File file(ss.str().c_str(), H5F_ACC_TRUNC);
+            hsize_t dims[3] = {(hsize_t)group.T, (hsize_t)group.H, (hsize_t)group.W};
+            H5::DataSpace space(3, dims);
+
+            H5::DSetCreatPropList plist;
+            
+            // 每帧一个 chunk，提升压缩率，服了没啥用
+            // hsize_t chunk_dims[3] = {1, (hsize_t)group.H, (hsize_t)group.W};
+            plist.setChunk(3, dims);
+            plist.setDeflate(6);
+
+            H5::DataSet dataset = file.createDataSet("/depth", H5::PredType::NATIVE_FLOAT, space, plist);
+            dataset.write(group.all_data.data(), H5::PredType::NATIVE_FLOAT);
+
+            auto write_attr = [&](const char* name, uint64_t value) {
+                H5::DataSpace attr_space(H5S_SCALAR);
+                H5::Attribute attr = dataset.createAttribute(name, H5::PredType::NATIVE_UINT64, attr_space);
+                attr.write(H5::PredType::NATIVE_UINT64, &value);
+            };
+
+            write_attr("frame_start_idx", group.frame_start);
+            write_attr("frame_end_idx", group.frame_end);
+            write_attr("timestamp_start_us", group.ts_start);
+            write_attr("timestamp_end_us", group.ts_end);
+            write_attr("num_frames", group.T);
+            write_attr("fps", group.fps);
+
+            file.close();
+
+            char logbuf[256];
+            _snprintf_s(logbuf, _TRUNCATE,
+                "[CV Capture] Saved %d depth frames to %s", group.T, ss.str().c_str());
+            reshade::log_message(reshade::log_level::info, logbuf);
+
+        } catch (...) {
+            reshade::log_message(reshade::log_level::error, "[HDF5] Write failed in thread");
+        }
+    }
+}
+
+
 
 void Recorder::duplicate(int n){
   if (n<=0) return;

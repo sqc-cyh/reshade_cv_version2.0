@@ -90,9 +90,10 @@ def load_cloud_via_depth_and_camjson(depthfile:str,
         fov_v, _ = fovv_and_fovh_degrees_given_either(fov_degrees_vertical, fov_degrees_horizontal, screen_width/screen_height)
     else:
         fov_v = fov_v_from_camjson(camjson, screen_width / screen_height)
-    fov_v = fov_v *1.5
+    # fov_v = fov_v *1.5
     assert 'extrinsic_cam2world' in camjson, str(sorted(list(camjson.keys())))
     cam2world = np.float64(camjson['extrinsic_cam2world']).reshape((3,4))
+    # cam2world[:3, 3] /= 2
     cam2world = np.pad(cam2world, ((0,1),(0,0)))
     cam2world[-1,-1] = 1.
     # conversion_matrix = np.array([

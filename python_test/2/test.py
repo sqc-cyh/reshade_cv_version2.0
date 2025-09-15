@@ -277,6 +277,10 @@ def main():
 
         fx, fy, cx, cy = make_K_from_fovy(fovx_deg, W, H, aspect_ratio)
         R_cv, t_cv = build_cv_c2w_from_ue(location, rotation)
+        c2w = np.eye(4)
+        c2w[:3, :3] = R_cv
+        c2w[:3, 3] = t_cv
+        print(f"[INFO] c2w 矩阵 (frame {i}, ts={ts}, file={pose_path}):\n{c2w}")
         pts_cam, uu, vv = backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=args.stride)
         d_sub = depth[::args.stride, ::args.stride]
         keep = np.ones_like(d_sub, dtype=bool)
