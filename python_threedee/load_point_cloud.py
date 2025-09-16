@@ -47,7 +47,10 @@ def load_depth_and_camjson(depthfile:str, and_rgb:bool):
     cmjfile = depthbnam+'_camera.json'
     if not os.path.isfile(cmjfile):
         cmjfile = depthbnam+'_meta.json'
-    assert os.path.isfile(cmjfile), cmjfile
+    # assert os.path.isfile(cmjfile), cmjfile
+        if not os.path.isfile(cmjfile):
+            print(f"[警告] 跳过文件 {depthfile}：未找到相机参数文件 ({cmjfile})")
+            return None
     with open(cmjfile,'r') as infile:
         camjson = json.load(infile)
     assert isinstance(camjson,dict), str(type(camjson))
@@ -76,6 +79,9 @@ def load_cloud_via_depth_and_camjson(depthfile:str,
             fov_degrees_vertical:float=None,
             fov_degrees_horizontal:float=None,
             ):
+    result = load_depth_and_camjson(depthfile, colored)
+    if result is None:
+        return None
     if not isinstance(max_distance,float):
         assert max_distance in (None,'np.inf','inf',), str(max_distance)
     if colored:
@@ -214,13 +220,33 @@ if __name__ == '__main__':
 
     args.depth_files = files_glob(args.depth_files)
 
-    clouds = merge_clouds_world_points(process_map(partial(load_cloud_via_depth_and_camjson,
-        colored=args.color_avail, max_distance=args.max_distance_clip_cloud,
-        subsample_amt=args.subsample_amt,
-        fov_degrees_vertical=args.fov_degrees_vertical,
-        fov_degrees_horizontal=args.fov_degrees_horizontal), args.depth_files))
+    # 并行加载点云
+    raw_clouds = process_map(
+        partial(load_cloud_via_depth_and_camjson,
+                colored=args.color_avail,
+                max_distance=args.max_distance_clip_cloud,
+                subsample_amt=args.subsample_amt,
+                fov_degrees_vertical=args.fov_degrees_vertical,
+                fov_degrees_horizontal=args.fov_degrees_horizontal),
+        args.depth_files
+    )
 
-    if args.save_to_file and len(args.save_to_file) > 1:
-        save_cloud_to_file(clouds, args.save_to_file)
+    # ✅ 关键：先过滤掉 None
+    valid_clouds = [c for c in raw_clouds if c is not None]
 
-    visualize_clouds(clouds)
+    if len(valid_clouds) == 0:
+        print("❌ 没有成功加载任何有效的帧。")
+        exit(1)
+
+    print(f"✅ 成功加载 {len(valid_clouds)} 帧，开始合并点云...")
+
+    # ✅ 再传给 merge_clouds_world_points
+    merged_cloud = merge_clouds_world_points(valid_clouds)
+
+    # 保存
+    if args.save_to_file and len(args.save_to_file.strip()) > 1:
+        save_cloud_to_file(merged_cloud, args.save_to_file)
+        print(f"💾 点云已保存至: {args.save_to_file}")
+
+    # 可视化
+    visualize_clouds(merged_cloud)
