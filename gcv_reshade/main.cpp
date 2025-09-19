@@ -178,25 +178,6 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 						generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
 						reshade::api::resource depth_res = genericdepdata.selected_depth_stencil;
 						reshade::api::command_queue* const q2 = runtime->get_command_queue();
-						// if (depth_res.handle != 0) {
-						//     char basebuf[512];
-						//     _snprintf_s(basebuf, _TRUNCATE, "%s/frame_%06llu_",
-						//                 g_rec_dir.c_str(), (unsigned long long)g_rec_idx);
-						//     const std::string basefilen = std::string(basebuf);
-
-						//     uint32_t writers = ImageWriter_epr; // 生成 depth.epr
-						//     const bool ok_depth =
-						//         shdata.save_texture_image_needing_resource_barrier_copy(
-						//             basefilen + "depth",
-						//             writers,
-						//             q2,
-						//             depth_res,
-						//             TexInterp_Depth);
-						//     if (!ok_depth) {
-						//         reshade::log_message(reshade::log_level::warning,
-						//             "record: failed to save per-frame depth (.epr)");
-						//     }
-						// }
 
 						if (depth_res.handle != 0) {
 							
@@ -206,10 +187,6 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 							const std::string basefilen = std::string(basebuf);
 
 							uint32_t writers = ImageWriter_numpy;                // 生成 depth.npy
-							// if (shdata.game_knows_depthbuffer()) {               // 生成 depth.fpzip
-							// 	writers |= ImageWriter_fpzip;
-							// }
-							
 							const bool ok_depth =
 							shdata.save_texture_image_needing_resource_barrier_copy(
 									basefilen + "depth",
@@ -223,20 +200,6 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 							}
 							
 						}
-						// h5文件版本
-						// if (depth_res.handle != 0) {
-						// 	std::vector<float> depth_floats;
-						// 	int dw = 0, dh = 0;
-						// 	// 使用你刚写的 grab_raw_depth_float32
-						// 	if (grab_raw_depth_float32(q2, depth_res, depth_floats, dw, dh)) {
-						// 		g_copy_fail_in_row = 0;
-						// 		// 推送到 Recorder → 自动分组保存
-						// 		g_rec->push_raw_depth(depth_floats.data(), dw, dh, g_rec_idx, now_us);
-
-						// 	} else {
-						// 		g_copy_fail_in_row++;
-						// 	}
-						// }
 					}
 					
 					const int64_t now_us_depth_2 = std::chrono::duration_cast<std::chrono::microseconds>(hiresclock::now() - shdata.init_time).count();
@@ -248,82 +211,36 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 						reshade::log_message(reshade::log_level::info,
 						("Frame skipped: Δt=%lld us", std::to_string(delta_us_depth).c_str()));
 					}	
-					// 每帧深度
-					// generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
-					// reshade::api::resource depth_res = genericdepdata.selected_depth_stencil;
-					// reshade::api::command_queue* const q2 = runtime->get_command_queue();
-					// if (depth_res.handle != 0) {
-					//     char basebuf[512];
-					//     _snprintf_s(basebuf, _TRUNCATE, "%s/frame_%06llu_",
-					//                 g_rec_dir.c_str(), (unsigned long long)g_rec_idx);
-					//     const std::string basefilen = std::string(basebuf);
-
-					//     uint32_t writers = ImageWriter_numpy;                // 生成 depth.npy
-					//     if (shdata.game_knows_depthbuffer()) {               // 生成 depth.fpzip
-					//         writers |= ImageWriter_fpzip;
-					//     }
-					//     const bool ok_depth =
-					//         shdata.save_texture_image_needing_resource_barrier_copy(
-					//             basefilen + "depth",
-					//             writers,
-					//             q2,
-					//             depth_res,
-					//             TexInterp_Depth);
-					//     if (!ok_depth) {
-					//         reshade::log_message(reshade::log_level::warning,
-					//             "record: failed to save per-frame depth (.npy/.fpzip)");
-					//     }
-					// }
-
-					// // 每帧 RGB
-					// reshade::api::resource color_res = dev->get_resource_from_view(rtv);
-					// // reshade::api::command_queue* const q2 = runtime->get_command_queue();
-					// if (color_res.handle != 0) {
-					// 	char basebuf[512];
-					// 	_snprintf_s(basebuf, _TRUNCATE, "%s/frame_%06llu_",
-					// 				g_rec_dir.c_str(), (unsigned long long)g_rec_idx);
-					// 	const std::string basefilen = std::string(basebuf);
-
-					// 	const bool ok_rgb = shdata.save_texture_image_needing_resource_barrier_copy(
-					// 		basefilen + "RGB",
-					// 		ImageWriter_STB_png,      
-					// 		q2,
-					// 		color_res,
-					// 		TexInterp_RGB);
-					// 	if (!ok_rgb) {
-					// 		reshade::log_message(reshade::log_level::warning,
-					// 			"record: failed to save per-frame RGB.png");
-					// 	}
-					// }
-
-					// if (depth_res.handle != 0) {
-					// 	char basebuf[512];
-					// 	_snprintf_s(basebuf, _TRUNCATE, "%s/frame_%06llu_",
-					// 				g_rec_dir.c_str(), (unsigned long long)g_rec_idx);
-					// 	const std::string basefilen = std::string(basebuf);
-
-					// 	const bool ok_depthpng = shdata.save_texture_image_needing_resource_barrier_copy(
-					// 		basefilen + "depth",
-					// 		ImageWriter_STB_png,       
-					// 		q2,
-					// 		depth_res,
-					// 		TexInterp_Depth);
-					// 	if (!ok_depthpng) {
-					// 		reshade::log_message(reshade::log_level::warning,
-					// 			"record: failed to save per-frame depth.png");
-					// 	}
-					// }
-
-					// 只在成功拿到彩色帧时推进帧号，有时候会掉帧
 
 					// keyboard status
-					uint32_t keymask = 0;
-					if (GetAsyncKeyState('W') & 0x8000) keymask |= 1u << 0;
-					if (GetAsyncKeyState('A') & 0x8000) keymask |= 1u << 1;
-					if (GetAsyncKeyState('S') & 0x8000) keymask |= 1u << 2;
-					if (GetAsyncKeyState('D') & 0x8000) keymask |= 1u << 3;
-					if (GetAsyncKeyState(VK_SHIFT) & 0x8000) keymask |= 1u << 4;
-					if (GetAsyncKeyState(VK_SPACE) & 0x8000) keymask |= 1u << 5;
+					uint32_t keymask_letters = 0;     // bit 0='A', bit 1='B', ..., bit 25='Z'
+					uint32_t keymask_modifiers = 0;   // 其他控制键
+
+					// 记录 A-Z
+					for (int i = 0; i < 26; ++i) {
+						char vk = 'A' + i;
+						if (GetAsyncKeyState(vk) & 0x8000) {
+							keymask_letters |= (1u << i);
+						}
+					}
+
+					// 控制键
+					const int SHIFT_BIT   = 0;
+					const int CTRL_BIT    = 1;
+					const int ALT_BIT     = 2;
+					const int SPACE_BIT   = 3;
+					const int ENTER_BIT   = 4;
+					const int ESCAPE_BIT  = 5;
+					const int TAB_BIT     = 6;
+
+					if (GetAsyncKeyState(VK_SHIFT)   & 0x8000) keymask_modifiers |= (1u << SHIFT_BIT);
+					if (GetAsyncKeyState(VK_CONTROL) & 0x8000) keymask_modifiers |= (1u << CTRL_BIT);
+					if (GetAsyncKeyState(VK_MENU)    & 0x8000) keymask_modifiers |= (1u << ALT_BIT);     // VK_MENU = Alt
+					if (GetAsyncKeyState(VK_SPACE)   & 0x8000) keymask_modifiers |= (1u << SPACE_BIT);
+					if (GetAsyncKeyState(VK_RETURN)  & 0x8000) keymask_modifiers |= (1u << ENTER_BIT);
+					if (GetAsyncKeyState(VK_ESCAPE)  & 0x8000) keymask_modifiers |= (1u << ESCAPE_BIT);
+					if (GetAsyncKeyState(VK_TAB)     & 0x8000) keymask_modifiers |= (1u << TAB_BIT);
+
 
 					if (grab_bgra_frame(q, color_res, bgra, w, h)) {
 						g_copy_fail_in_row = 0;
@@ -342,31 +259,11 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 					}
 
 					if (g_recording_mode == 2) { // Logic 2: save control signals
-						g_rec->log_action(g_rec_idx, now_us, keymask);
+						g_rec->log_action(g_rec_idx, now_us, keymask_letters, keymask_modifiers);
 					}
 					++g_rec_idx;
 					
-					// else {
-					// 	g_copy_fail_in_row++;
-					// 	reshade::log_message(reshade::log_level::warning, "stream copy to CPU failed");
-					// 	if (g_copy_fail_in_row >= g_copy_fail_stop_threshold) {
-					// 		reshade::log_message(reshade::log_level::error, "copy failed too many times; stop streaming");
-					// 		g_recording_mode = 0;
-					// 		if (g_rec) { g_rec->stop(); g_rec.reset(); }
-					// 	}
-					// }
 				}
-
-				// depth视频
-				// generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
-				// reshade::api::resource depth_res = genericdepdata.selected_depth_stencil;
-				// if (depth_res.handle != 0) {
-				// 	std::vector<uint8_t> gray; int dw=0, dh=0;
-				// 	if (grab_depth_gray8(runtime->get_command_queue(), depth_res, gray, dw, dh, g_depth_tone)) {
-				// 		// hud::draw_keys_gray(gray.data(), dw, dh, keymask);s
-				// 		g_rec->push_depth(gray.data(), dw, dh);
-				// 	}
-				// }
 
 				next_due_us += period_us;
 				g_last_cap_us = now_us;
@@ -433,9 +330,19 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 			}
 		}
 		if (g_recording_mode == 0) {
+			const int64_t now_us_depth_11 = std::chrono::duration_cast<std::chrono::microseconds>(hiresclock::now() - shdata.init_time).count();
 			if (shdata.save_texture_image_needing_resource_barrier_copy(basefilen + std::string("RGB"),
 				ImageWriter_STB_png, cmdqueue, device->get_resource_from_view(rtv), TexInterp_RGB))
 			{
+				const int64_t now_us_depth_21 = std::chrono::duration_cast<std::chrono::microseconds>(hiresclock::now() - shdata.init_time).count();
+					const int64_t delta_us_depth1 = now_us_depth_21 - now_us_depth_11;
+					reshade::log_message(reshade::log_level::info,
+							("Frame delta1111: Δt=%lld us", std::to_string(delta_us_depth1).c_str()));
+					if (std::abs(delta_us_depth1) > 6000) {
+						// delta_depth_ok = false;
+						reshade::log_message(reshade::log_level::info,
+						("Frame skipped1111: Δt=%lld us", std::to_string(delta_us_depth1).c_str()));
+					}	
 				if (shdata.save_texture_image_needing_resource_barrier_copy(basefilen + std::string("depth"),
 					ImageWriter_STB_png | ImageWriter_epr | ImageWriter_numpy | (shdata.game_knows_depthbuffer() ? ImageWriter_fpzip : 0),
 					cmdqueue, genericdepdata.selected_depth_stencil, TexInterp_Depth))

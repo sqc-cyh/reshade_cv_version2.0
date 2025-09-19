@@ -35,20 +35,31 @@ bool GameGTAV::can_interpret_depth_buffer() const {
 }
 
 float GameGTAV::convert_to_physical_distance_depth_u64(uint64_t depthval) const {
-    // 将 u64 (实际上是 u32) 的位模式重新解释为 float
-    // const double normalizeddepth = static_cast<double>(depthval);
-    // return normalizeddepth;
+
     uint32_t depth_as_u32 = static_cast<uint32_t>(depthval);
     float depth;
     std::memcpy(&depth, &depth_as_u32, sizeof(float));
 
-    // f = 10003.814, n = 0.15
     const float n = 0.15f;
     const float f = 10003.814f;
-
     const float numerator_constant = (-f * n) / (n - f);
     const float denominator_constant = n / (n - f);
-
-    // 将深度值代入公式并返回
     return numerator_constant / (depth - denominator_constant);
+    // 将 u64 (实际上是 u32) 的位模式重新解释为 float
+    // const double normalized_depth = static_cast<double>(depthval) / static_cast<double>(std::numeric_limits<uint32_t>::max());
+    // const double near_plane = 10.0;
+    // const double far_plane = 100000.0;
+    // const double physical_distance = (near_plane * far_plane) / (far_plane - normalized_depth * (far_plane - near_plane));
+
+    // return static_cast<double>(physical_distance);
+
+    // // 将深度值代入公式并返回
+    // return numerator_constant / (depth - denominator_constant);
+
+
+    // const float C = 0.01f;
+    // const float n = 0.05f;
+    // const float f = 10000.0f;
+    // float d_lin = (exp(depth * log(1.0f + C)) - 1.0f) / C;
+    // return (-f * n) / (d_lin * (f - n) - f);
 }

@@ -27,3 +27,4 @@ public:
 
 REGISTER_GAME_INTERFACE(GameGTAV, 0, "gta5.exe");
 REGISTER_GAME_INTERFACE(GameGTAV, 1, "gta5_enhanced.exe");
+
