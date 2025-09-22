@@ -86,7 +86,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
             if (runtime->is_key_pressed(VK_F9)) {
                 // Logic 1: 5fps, depth, rgb video, camera
                 g_recording_mode = 1;
-                g_video_fps = 5;
+                g_video_fps = 1;
                 start_rec = true;
             } else if (runtime->is_key_pressed(VK_F7)) {
                 // Logic 2: 16fps, rgb video, controls, camera
@@ -187,6 +187,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 							const std::string basefilen = std::string(basebuf);
 
 							uint32_t writers = ImageWriter_numpy;                // 生成 depth.npy
+							// ImageWriter_STB_png
 							const bool ok_depth =
 							shdata.save_texture_image_needing_resource_barrier_copy(
 									basefilen + "depth",
@@ -206,7 +207,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 					const int64_t delta_us_depth = now_us_depth_2 - now_us_depth_1;
 					reshade::log_message(reshade::log_level::info,
 							("Frame delta: Δt=%lld us", std::to_string(delta_us_depth).c_str()));
-					if (std::abs(delta_us_depth) > 6000) {
+					if (std::abs(delta_us_depth) > 9000) {
 						delta_depth_ok = false;
 						reshade::log_message(reshade::log_level::info,
 						("Frame skipped: Δt=%lld us", std::to_string(delta_us_depth).c_str()));

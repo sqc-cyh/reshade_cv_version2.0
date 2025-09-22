@@ -6,7 +6,15 @@
 #include <mutex>
 #include <sstream>
 #include "H5Cpp.h"
+
 using Json = nlohmann::json_abi_v3_12_0::json;
+const int SHIFT_BIT   = 0;
+const int CTRL_BIT    = 1;
+const int ALT_BIT     = 2;
+const int SPACE_BIT   = 3;
+const int ENTER_BIT   = 4;
+const int ESCAPE_BIT  = 5;
+const int TAB_BIT     = 6;
 static inline std::string join_path_slash(std::string s) {
   if (!s.empty() && s.back()!='/' && s.back()!='\\') s.push_back('/');
   return s;
@@ -309,12 +317,37 @@ void Recorder::duplicate(int n){
   }
 }
 
-void Recorder::log_action(uint64_t idx, long long t_us, uint32_t keymask){
-  if (!csv_) return;
-  auto b = [&](unsigned bit){ return (keymask & (1u<<bit)) ? 1 : 0; };
-  std::fprintf(csv_, "%llu,%lld,%d,%d,%d,%d,%d,%d\n",
-    (unsigned long long)idx, (long long)t_us,
-    b(0), b(1), b(2), b(3), b(4), b(5));
+void Recorder::log_action(uint64_t idx, int64_t t_us,
+                          uint32_t letters_mask, uint32_t modifiers_mask)
+{
+    if (!csv_) return;
+
+    // 写入 CSV 头部信息（仅一次）
+    // static bool header_written = false;
+    // if (!header_written) {
+    //     fprintf(csv_, "frame_idx,time_us,");
+    //     for (char c = 'A'; c <= 'Z'; ++c) {
+    //         fprintf(csv_, "%c,", c);
+    //     }
+    //     fprintf(csv_, "shift,ctrl,alt,space,enter,escape,tab\n");
+    //     header_written = true;
+    // }
+
+    // 输出 frame_idx 和 time_us
+    std::fprintf(csv_, "%llu,%lld,", (unsigned long long)idx, (long long)t_us);
+
+    // 输出 A-Z 状态
+    for (int i = 0; i < 26; ++i) {
+        std::fprintf(csv_, "%d,", ((letters_mask >> i) & 1) ? 1 : 0);
+    }
+
+    // 输出修饰键
+    auto b = [&](unsigned bit) { return (modifiers_mask & (1u << bit)) ? 1 : 0; };
+    std::fprintf(csv_, "%d,%d,%d,%d,%d,%d,%d\n",
+        b(SHIFT_BIT),  b(CTRL_BIT),   b(ALT_BIT),
+        b(SPACE_BIT),  b(ENTER_BIT),  b(ESCAPE_BIT), b(TAB_BIT));
+
+    fflush(csv_); // 确保实时写入
 }
 
 void Recorder::color_loop(){

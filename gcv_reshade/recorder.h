@@ -67,7 +67,9 @@ public:
     void push_raw_depth(const float* data, int w, int h, uint64_t frame_idx, int64_t timestamp_us);
     void duplicate(int n_dup);
 
-    void log_action(uint64_t idx, long long t_us, uint32_t keymask);
+    void log_action(uint64_t idx, int64_t timestamp_us,
+                uint32_t letters_mask,      // A-Z
+                uint32_t modifiers_mask);   // Ctrl/Shift/etc.
     void log_camera_json(uint64_t idx, long long t_us, const Json& cam_json, int img_w, int img_h);
 
 private:
