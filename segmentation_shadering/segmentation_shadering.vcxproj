@@ -73,12 +73,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)renderdoc</IncludePath>
     <IntDir>$(SolutionDir)build\intermediate_segmshader\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)renderdoc</IncludePath>
     <IntDir>$(SolutionDir)build\intermediate_segmshader\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -116,14 +116,14 @@
       <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\lib;C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>dxilconv.lib</AdditionalDependencies>
     </Lib>
     <ProjectReference />
@@ -137,7 +137,7 @@
       <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,7 +146,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\lib;C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>dxilconv.lib</AdditionalDependencies>
     </Lib>
     <ProjectReference />
