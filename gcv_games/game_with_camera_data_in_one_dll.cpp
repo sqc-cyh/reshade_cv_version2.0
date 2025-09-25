@@ -3,6 +3,7 @@
 #include "gcv_utils/miscutils.h"
 #include "gcv_utils/memread.h"
 #include "gcv_utils/scan_for_camera_matrix.h"
+#include <cstring>
 
 bool GameWithCameraDataInOneDLL::init_in_game() {
   if (camera_dll != 0)
@@ -24,6 +25,10 @@ scriptedcam_checkbuf_funptr GameWithCameraDataInOneDLL::get_scriptedcambuf_check
     return dummy_check_scriptedcambuf;
 }
 
+uint64_t GameWithCameraDataInOneDLL::get_scriptedcambuf_triggerbytes() const
+{
+    return 4429373075689993337ull;
+}
 
 bool GameWithCameraDataInOneDLL::read_scripted_cambuf_and_copy_to_matrix(CamMatrixData& rcam, std::string& errstr) {
   if (cam_matrix_mem_loc_saved == 0 && !scan_all_memory_for_scripted_cam_matrix(errstr)) return false;
@@ -102,8 +107,8 @@ bool GameWithCameraDataInOneDLL::scan_all_memory_for_scripted_cam_matrix(std::st
     return false;
   }
   const uint64_t bufbytes = get_scriptedcambuf_sizebytes();
-  constexpr uint64_t magicbytes = 4429373075689993337ull; // should rarely occur in game memory; so, easy to search for
-
+  // constexpr uint64_t magicbytes = 4429373075689993337ull; // should rarely occur in game memory; so, easy to search for
+  const uint64_t magicbytes = get_scriptedcambuf_triggerbytes();
   AllMemScanner scanner(mygame_handle_exe, bufbytes, errstr, magicbytes, true);
   uint64_t foundloc = 0;
   const uint8_t* foundbuf = nullptr;

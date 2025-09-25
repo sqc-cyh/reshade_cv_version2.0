@@ -28,9 +28,167 @@
 #include <ShlObj.h>
 #include <algorithm>
 #include <nlohmann/json.hpp>
-
+#include <cmath> // 确保包含了 cmath 用于 sin 和 cos
 #include <cnpy.h>
 using Json = nlohmann::json_abi_v3_12_0::json;
+
+
+static double g_camera_data_buffer[17] = {
+	1.20040525131452021e-12,// 第二个魔数签名
+    // 1.38097189588312856e-12, 
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+};
+static double g_camera_buffer_counter = 0.0;
+
+// 为 ReShade 5.8.0 API 创建重载函数
+reshade::api::effect_uniform_variable find_uniform(reshade::api::effect_runtime* runtime, const char* name)
+{
+    if (!runtime) return { 0 };
+    reshade::api::effect_uniform_variable var = runtime->find_uniform_variable("IgcsSourceTester.fx", name);
+    if (var == 0) {
+        var = runtime->find_uniform_variable("IgcsDof.fx", name); // 回退查找
+    }
+    return var;
+}
+
+bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name, bool& value)
+{
+    reshade::api::effect_uniform_variable var = find_uniform(runtime, name);
+    if (var != 0) {
+        runtime->get_uniform_value_bool(var, &value, 1);
+        return true;
+    }
+    return false;
+}
+
+bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name, float& value)
+{
+    reshade::api::effect_uniform_variable var = find_uniform(runtime, name);
+    if (var != 0) {
+        runtime->get_uniform_value_float(var, &value, 1);
+        return true;
+    }
+    return false;
+}
+
+bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name, float* values, size_t count)
+{
+    reshade::api::effect_uniform_variable var = find_uniform(runtime, name);
+    if (var != 0) {
+        runtime->get_uniform_value_float(var, values, count);
+        return true;
+    }
+    return false;
+}
+
+// 这部分缓冲区生成的相机需要后处理
+
+void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
+{
+    bool available = false;
+    if (!read_uniform_value(runtime, "IGCS_cameraDataAvailable", available) || !available)
+    {
+        // 如果相机数据不可用，清零缓冲区
+        for (int i = 2; i <= 14; ++i) g_camera_data_buffer[i] = 0.0;
+        g_camera_data_buffer[15] = g_camera_data_buffer[1];
+        g_camera_data_buffer[16] = g_camera_data_buffer[1];
+        return;
+    }
+
+    float fov = 0.0f;
+    float camera_ue_pos[3] = {0.0f};  // UE坐标系下的位置 (+X前, +Y右, +Z上)
+    // 读取欧拉角 (IGCS 提供的是弧度)
+    float roll = 0.0f, pitch = 0.0f, yaw = 0.0f;
+
+    read_uniform_value(runtime, "IGCS_cameraFoV", fov);
+    read_uniform_value(runtime, "IGCS_cameraWorldPosition", camera_ue_pos, 3);
+    // 读取欧拉角
+    read_uniform_value(runtime, "IGCS_cameraRotationRoll", roll);
+    read_uniform_value(runtime, "IGCS_cameraRotationPitch", pitch);
+    read_uniform_value(runtime, "IGCS_cameraRotationYaw", yaw);
+
+    // char euler_msg[128];
+    // snprintf(euler_msg, sizeof(euler_msg), "[Camera Euler] roll: %.6f, pitch: %.6f, yaw: %.6f", roll, pitch, yaw);
+    // reshade::log_message(reshade::log_level::info, euler_msg);
+
+    // --- 按 ZYX 顺序计算旋转矩阵 (Yaw→Pitch→Roll) ---
+    // 复现 Python 中的 ue_rotator_to_R_world 逻辑 (左手系外在旋转)
+    const float cr = cos(roll);
+    const float sr = sin(roll);
+    const float cp = cos(pitch);
+    const float sp = sin(pitch);
+    const float cy = cos(yaw);
+    const float sy = sin(yaw);
+
+    // 旋转矩阵 R = Rz(yaw) * Ry(pitch) * Rx(roll)
+    // 列向量: right (X), up (Y), forward (Z)
+    float c2w_col_right[3];   // 第一列
+    float c2w_col_up[3];      // 第二列
+    float c2w_col_forward[3]; // 第三列
+
+    // Right vector (X轴)
+    c2w_col_right[0] = cy * cp;
+    c2w_col_right[1] = -sy * cp;
+    c2w_col_right[2] = sp;
+
+    // Up vector (Y轴)
+    c2w_col_up[0] = cy * sp * sr + sy * cr;
+    c2w_col_up[1] = -sy * sp * sr + cy * cr;
+    c2w_col_up[2] = -cp * sr;
+
+    // Forward vector (Z轴)
+    c2w_col_forward[0] = -cy * sp * cr + sy * sr;
+    c2w_col_forward[1] = sy * sp * cr + cy * sr;
+    c2w_col_forward[2] = cp * cr;
+    
+    // --- 坐标系转换: UE位置 → 目标坐标系 (如OpenCV世界系) ---
+    // 对应 Python 中的 M_UE_to_CV 轴映射:
+    // UE(左手,+X前,+Y右,+Z上) → 目标系(x右,y下,z前)
+    float camera_target_pos[3];
+    camera_target_pos[0] = camera_ue_pos[1];  // 目标x = UE Y (右)
+    camera_target_pos[1] = -camera_ue_pos[2]; // 目标y = -UE Z (下)
+    camera_target_pos[2] = camera_ue_pos[0];  // 目标z = UE X (前)
+
+    // --- 更新缓冲区 ---
+    g_camera_buffer_counter += 1.0;
+    if (g_camera_buffer_counter > 9999.5) g_camera_buffer_counter = 1.0;
+
+    g_camera_data_buffer[1] = g_camera_buffer_counter;
+
+	g_camera_data_buffer[2] = c2w_col_right[0];   // R11
+    g_camera_data_buffer[3] = c2w_col_up[0];      // R12
+    g_camera_data_buffer[4] = c2w_col_forward[0]; // R13
+    g_camera_data_buffer[5] = camera_target_pos[0]; // Tx
+
+    // 第二行
+    g_camera_data_buffer[6] = c2w_col_right[1];   // R21
+    g_camera_data_buffer[7] = c2w_col_up[1];      // R22
+    g_camera_data_buffer[8] = c2w_col_forward[1]; // R23
+    g_camera_data_buffer[9] = camera_target_pos[1]; // Ty
+
+    // 第三行
+    g_camera_data_buffer[10] = c2w_col_right[2];  // R31
+    g_camera_data_buffer[11] = c2w_col_up[2];     // R32
+    g_camera_data_buffer[12] = c2w_col_forward[2];// R33
+    g_camera_data_buffer[13] = camera_target_pos[2];// Tz
+
+    g_camera_data_buffer[14] = fov;
+
+    // 哈希计算保持不变
+    double poshash1 = 0.0;
+    double poshash2 = 0.0;
+    for(int i = 1; i <= 14; ++i)
+    {
+        poshash1 += g_camera_data_buffer[i];
+        poshash2 += (i % 2 == 0 ? -g_camera_data_buffer[i] : g_camera_data_buffer[i]);
+    }
+    g_camera_data_buffer[15] = poshash1;
+    g_camera_data_buffer[16] = poshash2;
+}
+
+
+
+
 typedef std::chrono::steady_clock hiresclock;
 
 // ------------------ Global recording status ------------------
@@ -69,13 +227,14 @@ static void on_destroy(reshade::api::device* device)
 static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
     reshade::api::command_list *, reshade::api::resource_view rtv, reshade::api::resource_view)
 {
+	
     auto &shdata = runtime->get_device()->get_private_data<image_writer_thread_pool>();
     CamMatrixData gamecam; std::string errstr;
     bool shaderupdatedwithcampos = false;
     float shadercamposbuf[4];
     reshade::api::device* const device = runtime->get_device();
     auto& segmapp = device->get_private_data<segmentation_app_data>();
-
+	UpdateCameraBufferFromReshade(runtime);
     { // record
         const int64_t now_us = std::chrono::duration_cast<std::chrono::microseconds>(hiresclock::now() - shdata.init_time).count();
         const bool ctrl_down = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
@@ -139,7 +298,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 				reshade::api::device* const dev = runtime->get_device();
 				reshade::api::command_queue* const q = runtime->get_command_queue();
 				const reshade::api::resource color_res = dev->get_resource_from_view(rtv);
-
+				
 				bool color_ok = false;
 				int w = 0, h = 0;
 				

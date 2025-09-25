@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 np.set_printoptions(threshold=np.inf)
 
 # 你的 .npy 文件路径
-file_path = r"C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\bin\x64\cv_saved\actions_2025-09-12_1857605979\frame_000011_depth.npy"
+file_path = r"C:\Program Files (x86)\Steam\steamapps\common\Assassins Creed Odyssey\cv_saved\AssassinsCreedOdyssey_2025-09-24_1089608613_depth.npy"
 try:
     # 加载 .npy 文件
     data = np.load(file_path)

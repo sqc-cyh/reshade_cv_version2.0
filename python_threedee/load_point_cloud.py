@@ -98,18 +98,36 @@ def load_cloud_via_depth_and_camjson(depthfile:str,
         fov_v = fov_v_from_camjson(camjson, screen_width / screen_height)
     # fov_v = fov_v *1.5
     assert 'extrinsic_cam2world' in camjson, str(sorted(list(camjson.keys())))
-    cam2world = np.float64(camjson['extrinsic_cam2world']).reshape((3,4))
-    # cam2world[:3, 3] /= 2
-    cam2world = np.pad(cam2world, ((0,1),(0,0)))
-    cam2world[-1,-1] = 1.
+    # cam2world = np.float64(camjson['extrinsic_cam2world']).reshape((3,4))
+    # # cam2world[:3, 3] /= 2
+    # cam2world = np.pad(cam2world, ((0,1),(0,0)))
+    # cam2world[-1,-1] = 1.
+
+    cam2world_ue = np.float64(camjson['extrinsic_cam2world']).reshape(3, 4)
+    R_ue = cam2world_ue[:, :3]
+    t_ue = cam2world_ue[:, 3]
+    M_UE_to_CV = np.array([[0, 1,  0],
+                        [0, 0, -1],
+                        [1, 0,  0]], dtype=np.float64)
+
+    R_cv = M_UE_to_CV @ R_ue @ M_UE_to_CV.T
+    t_cv = M_UE_to_CV @ t_ue
+
+    cam2world = np.eye(4, dtype=np.float64)
+    cam2world[:3, :3] = R_cv
+    cam2world[:3, 3] = t_cv
+    # cam2world[1,:] = -cam2world[1,:] # OpenCV Y轴向下，UE Y轴向上
+
+
+    # cam2world[:3, 3] *= 1.1
     # conversion_matrix = np.array([
-    #     [1,  0,  0, 0],
-    #     [0,  0,  1, 0],
-    #     [0, -1,  0, 0],
+    #     [0,  1,  0, 0],
+    #     [0,  0,  -1, 0],
+    #     [1, 0,  0, 0],
     #     [0,  0,  0, 1]
     # ])
-    
     # cam2world = cam2world @ conversion_matrix
+    print("cam2world:\n", cam2world)
     # cam2world = np.linalg.inv(cam2world)
     cam2screen = build_intrinsicmatrix_camtoscreenpix_pinhole_camera(fov_vertical_degrees=fov_v, \
         screen_width=screen_width, screen_height=screen_height)
@@ -120,12 +138,13 @@ def load_cloud_via_depth_and_camjson(depthfile:str,
     if colored:
         rgb = rgb.reshape((-1,3))
 
+    depth_mask_keep = (depth.flatten() >= 0.2)
     if max_distance is not None and np.isfinite(max_distance):
-        depth_mask_keep = np.less(depth, max_distance).flatten()
-        wpoints = np.stack([wpoints[ii,:][depth_mask_keep] for ii in range(wpoints.shape[0])],axis=0)
-        imcoords = np.stack([imcoords[:,ii][depth_mask_keep] for ii in range(imcoords.shape[1])],axis=1)
-        if colored:
-            rgb = np.stack([rgb[:,ii][depth_mask_keep] for ii in range(rgb.shape[1])],axis=1)
+        depth_mask_keep &= (depth.flatten() < max_distance)
+    wpoints = np.stack([wpoints[ii,:][depth_mask_keep] for ii in range(wpoints.shape[0])],axis=0)
+    imcoords = np.stack([imcoords[:,ii][depth_mask_keep] for ii in range(imcoords.shape[1])],axis=1)
+    if colored:
+        rgb = np.stack([rgb[:,ii][depth_mask_keep] for ii in range(rgb.shape[1])],axis=1)
 
     wpoints = np.ascontiguousarray(np.matmul(screen2world, wpoints).transpose()[:,:3])
     # GTA -> Open3D 坐标系
@@ -157,6 +176,7 @@ def load_cloud_via_depth_and_camjson(depthfile:str,
     #             [0, 0, -1],
     #             [0, 1,  0]], dtype=np.float64)
     # wpoints = wpoints @ S8.T  # 行向量右乘 S^T
+    
     if subsample_amt > 0: # quick and dirty random subsampling... voxel subsampling is nicer
         if colored:
             wpoints, imcoords, rgb = random_subsample(subsample_amt, wpoints, imcoords, rgb)
