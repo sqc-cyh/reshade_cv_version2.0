@@ -107,12 +107,7 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
     read_uniform_value(runtime, "IGCS_cameraRotationPitch", pitch);
     read_uniform_value(runtime, "IGCS_cameraRotationYaw", yaw);
 
-    // char euler_msg[128];
-    // snprintf(euler_msg, sizeof(euler_msg), "[Camera Euler] roll: %.6f, pitch: %.6f, yaw: %.6f", roll, pitch, yaw);
-    // reshade::log_message(reshade::log_level::info, euler_msg);
-
-    // --- 按 ZYX 顺序计算旋转矩阵 (Yaw→Pitch→Roll) ---
-    // 复现 Python 中的 ue_rotator_to_R_world 逻辑 (左手系外在旋转)
+    // 按 ZYX 顺序计算初始旋转矩阵 R_ue 和初始平移 t_ue ---
     const float cr = cos(roll);
     const float sr = sin(roll);
     const float cp = cos(pitch);
@@ -120,11 +115,10 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
     const float cy = cos(yaw);
     const float sy = sin(yaw);
 
-    // 旋转矩阵 R = Rz(yaw) * Ry(pitch) * Rx(roll)
-    // 列向量: right (X), up (Y), forward (Z)
-    float c2w_col_right[3];   // 第一列
-    float c2w_col_up[3];      // 第二列
-    float c2w_col_forward[3]; // 第三列
+    // 旋转矩阵 R_ue初始（列向量：right(X)、up(Y)、forward(Z)）
+    float c2w_col_right[3];   // 第一列（right）
+    float c2w_col_up[3];      // 第二列（up）
+    float c2w_col_forward[3]; // 第三列（forward）
 
     // Right vector (X轴)
     c2w_col_right[0] = cy * cp;
@@ -141,43 +135,85 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
     c2w_col_forward[1] = sy * sp * cr + cy * sr;
     c2w_col_forward[2] = cp * cr;
     
-    // --- 坐标系转换: UE位置 → 目标坐标系 (如OpenCV世界系) ---
-    // 对应 Python 中的 M_UE_to_CV 轴映射:
-    // UE(左手,+X前,+Y右,+Z上) → 目标系(x右,y下,z前)
+    // 平移向量 t_ue初始（UE位置→初始目标系）
     float camera_target_pos[3];
     camera_target_pos[0] = camera_ue_pos[1];  // 目标x = UE Y (右)
     camera_target_pos[1] = -camera_ue_pos[2]; // 目标y = -UE Z (下)
     camera_target_pos[2] = camera_ue_pos[0];  // 目标z = UE X (前)
 
-    // --- 更新缓冲区 ---
+    const float pose_scale = 1.0f; 
+
+    float R_ue_matrix[3][3] = {
+        { c2w_col_right[0],  c2w_col_up[0],  c2w_col_forward[0] }, // 第0行（R11, R12, R13）
+        { c2w_col_right[1],  c2w_col_up[1],  c2w_col_forward[1] }, // 第1行（R21, R22, R23）
+        { c2w_col_right[2],  c2w_col_up[2],  c2w_col_forward[2] }  // 第2行（R31, R32, R33）
+    };
+
+    const float M_UE_to_CV[3][3] = {
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, -1.0f },
+        { 1.0f, 0.0f, 0.0f }
+    };
+ 
+    const float M_T[3][3] = {
+        { 0.0f, 0.0f, 1.0f },  // M的第0列→M_T的第0行
+        { 1.0f, 0.0f, 0.0f },  // M的第1列→M_T的第1行
+        { 0.0f, -1.0f, 0.0f }  // M的第2列→M_T的第2行
+    };
+
+    float temp_matrix[3][3] = { 0.0f }; // 临时矩阵：R_ue_matrix @ M_T
+    float R_cv_final[3][3] = { 0.0f };  // 最终旋转矩阵
+
+    for (int i = 0; i < 3; ++i) { // temp_matrix的行
+        for (int j = 0; j < 3; ++j) { // temp_matrix的列
+            for (int k = 0; k < 3; ++k) { // 累加维度
+                temp_matrix[i][j] += R_ue_matrix[i][k] * M_T[k][j];
+            }
+        }
+    }
+
+ 
+    for (int i = 0; i < 3; ++i) { // R_cv_final的行
+        for (int j = 0; j < 3; ++j) { // R_cv_final的列
+            for (int k = 0; k < 3; ++k) { // 累加维度
+                R_cv_final[i][j] += M_UE_to_CV[i][k] * temp_matrix[k][j];
+            }
+        }
+    }
+
+    float t_cv_final[3] = {
+        camera_target_pos[2] * pose_scale,  // Python中的t_cv[0] = t_ue[2]
+        camera_target_pos[1] * pose_scale,  // Python中的t_cv[1] = t_ue[1]
+        camera_target_pos[0] * pose_scale   // Python中的t_cv[2] = t_ue[0]
+    };
+
     g_camera_buffer_counter += 1.0;
     if (g_camera_buffer_counter > 9999.5) g_camera_buffer_counter = 1.0;
-
     g_camera_data_buffer[1] = g_camera_buffer_counter;
 
-	g_camera_data_buffer[2] = c2w_col_right[0];   // R11
-    g_camera_data_buffer[3] = c2w_col_up[0];      // R12
-    g_camera_data_buffer[4] = c2w_col_forward[0]; // R13
-    g_camera_data_buffer[5] = camera_target_pos[0]; // Tx
+    // 第一行：R_cv_final[0][0] (R11), R_cv_final[0][1] (R12), R_cv_final[0][2] (R13), t_cv_final[0] (Tx)
+    g_camera_data_buffer[2] = R_cv_final[0][0];
+    g_camera_data_buffer[3] = R_cv_final[0][1];
+    g_camera_data_buffer[4] = R_cv_final[0][2];
+    g_camera_data_buffer[5] = t_cv_final[0];
 
-    // 第二行
-    g_camera_data_buffer[6] = c2w_col_right[1];   // R21
-    g_camera_data_buffer[7] = c2w_col_up[1];      // R22
-    g_camera_data_buffer[8] = c2w_col_forward[1]; // R23
-    g_camera_data_buffer[9] = camera_target_pos[1]; // Ty
+    // 第二行：R_cv_final[1][0] (R21), R_cv_final[1][1] (R22), R_cv_final[1][2] (R23), t_cv_final[1] (Ty)
+    g_camera_data_buffer[6] = R_cv_final[1][0];
+    g_camera_data_buffer[7] = R_cv_final[1][1];
+    g_camera_data_buffer[8] = R_cv_final[1][2];
+    g_camera_data_buffer[9] = t_cv_final[1];
 
-    // 第三行
-    g_camera_data_buffer[10] = c2w_col_right[2];  // R31
-    g_camera_data_buffer[11] = c2w_col_up[2];     // R32
-    g_camera_data_buffer[12] = c2w_col_forward[2];// R33
-    g_camera_data_buffer[13] = camera_target_pos[2];// Tz
+    // 第三行：R_cv_final[2][0] (R31), R_cv_final[2][1] (R32), R_cv_final[2][2] (R33), t_cv_final[2] (Tz)
+    g_camera_data_buffer[10] = R_cv_final[2][0];
+    g_camera_data_buffer[11] = R_cv_final[2][1];
+    g_camera_data_buffer[12] = R_cv_final[2][2];
+    g_camera_data_buffer[13] = t_cv_final[2];
 
+    // FOV和哈希计算（保持C++原有逻辑不变）
     g_camera_data_buffer[14] = fov;
-
-    // 哈希计算保持不变
     double poshash1 = 0.0;
     double poshash2 = 0.0;
-    for(int i = 1; i <= 14; ++i)
+    for (int i = 1; i <= 14; ++i)
     {
         poshash1 += g_camera_data_buffer[i];
         poshash2 += (i % 2 == 0 ? -g_camera_data_buffer[i] : g_camera_data_buffer[i]);

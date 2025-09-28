@@ -41,30 +41,45 @@ def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     return pts_cam, uu.reshape(-1), vv.reshape(-1)
 
 # -------------------------- 从extrinsic_cam2world解析UE→OpenCV转换 --------------------------
-def ue_cam2world_to_cv(ue_cam2world, pose_scale=1.0):
+# def ue_cam2world_to_cv(ue_cam2world, pose_scale=1.0):
+#     """
+#     将UE的3x4相机矩阵转换为OpenCV系c2w矩阵
+#     ue_cam2world: 3x4数组，格式为[R_ue(3x3) | t_ue(3x1)]
+#     """
+#     # 1. 提取UE系旋转和平移
+#     R_ue = ue_cam2world[:, :3]  # 3x3旋转矩阵（UE系）
+#     t_ue = ue_cam2world[:, 3]   # 3x1平移向量（UE系，未缩放）
+    
+#     # 2. 应用缩放（与正确脚本的pose_scale一致）
+#     t_ue_scaled = t_ue * pose_scale
+    
+#     # 3. UE→OpenCV轴映射（与正确脚本的M_UE_to_CV一致）
+#     M_UE_to_CV = np.array([[0, 1,  0],
+#                            [0, 0, -1],
+#                            [1, 0,  0]], dtype=np.float64)
+#     # 旋转矩阵转换
+#     R_cv = M_UE_to_CV @ R_ue @ M_UE_to_CV.T
+#     # 平移向量转换（分量对应与正确脚本一致）
+#     t_cv = np.array([
+#         t_ue_scaled[2],  # OpenCV X = UE X（前方向）
+#         t_ue_scaled[1],  # OpenCV Y = UE Z（上方向）
+#         t_ue_scaled[0]   # OpenCV Z = UE Y（右方向）
+#     ], dtype=np.float64)
+    
+#     # 4. 构造4x4 c2w矩阵
+#     c2w = np.eye(4, dtype=np.float64)
+#     c2w[:3, :3] = R_cv
+#     c2w[:3, 3] = t_cv
+#     return c2w, R_cv, t_cv
+
+def ue_cam2world_to_cv_unchanged(ue_cam2world, pose_scale=1.0):
     """
     将UE的3x4相机矩阵转换为OpenCV系c2w矩阵
     ue_cam2world: 3x4数组，格式为[R_ue(3x3) | t_ue(3x1)]
     """
     # 1. 提取UE系旋转和平移
-    R_ue = ue_cam2world[:, :3]  # 3x3旋转矩阵（UE系）
-    t_ue = ue_cam2world[:, 3]   # 3x1平移向量（UE系，未缩放）
-    
-    # 2. 应用缩放（与正确脚本的pose_scale一致）
-    t_ue_scaled = t_ue * pose_scale
-    
-    # 3. UE→OpenCV轴映射（与正确脚本的M_UE_to_CV一致）
-    M_UE_to_CV = np.array([[0, 1,  0],
-                           [0, 0, -1],
-                           [1, 0,  0]], dtype=np.float64)
-    # 旋转矩阵转换
-    R_cv = M_UE_to_CV @ R_ue @ M_UE_to_CV.T
-    # 平移向量转换（分量对应与正确脚本一致）
-    t_cv = np.array([
-        t_ue_scaled[2],  # OpenCV X = UE X（前方向）
-        t_ue_scaled[1],  # OpenCV Y = UE Z（上方向）
-        t_ue_scaled[0]   # OpenCV Z = UE Y（右方向）
-    ], dtype=np.float64)
+    R_cv = ue_cam2world[:, :3]  # 3x3旋转矩阵（UE系）
+    t_cv = ue_cam2world[:, 3]   # 3x1平移向量（UE系，未缩放）
     
     # 4. 构造4x4 c2w矩阵
     c2w = np.eye(4, dtype=np.float64)
@@ -151,9 +166,9 @@ def load_cloud_via_meta(depthfile:str,
     # 1. 从相机数据读取参数（camera.json和meta.json结构一致）
     fov_v_deg = float(cam_data['fov_v_degrees'])  # 垂直FOV
     ue_cam2world = np.array(cam_data['extrinsic_cam2world'], dtype=np.float64).reshape(3, 4)  # 3x4相机矩阵
-
+    print("ue_cam2world:\n", ue_cam2world)
     # 2. 转换为OpenCV系c2w矩阵（与正确脚本对齐）
-    c2w, R_cv, t_cv = ue_cam2world_to_cv(ue_cam2world, pose_scale)
+    c2w, R_cv, t_cv = ue_cam2world_to_cv_unchanged(ue_cam2world, pose_scale)
     print(f"[DEBUG] 帧 {depthbnam} 的c2w矩阵:\n{c2w}")
 
     # 3. 计算内参（用垂直FOV，与正确脚本逻辑一致）

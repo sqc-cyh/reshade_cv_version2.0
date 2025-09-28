@@ -98,28 +98,13 @@ def load_cloud_via_depth_and_camjson(depthfile:str,
         fov_v = fov_v_from_camjson(camjson, screen_width / screen_height)
     # fov_v = fov_v *1.5
     assert 'extrinsic_cam2world' in camjson, str(sorted(list(camjson.keys())))
-    # cam2world = np.float64(camjson['extrinsic_cam2world']).reshape((3,4))
-    # # cam2world[:3, 3] /= 2
-    # cam2world = np.pad(cam2world, ((0,1),(0,0)))
-    # cam2world[-1,-1] = 1.
+    cam2world = np.float64(camjson['extrinsic_cam2world']).reshape((3,4))
+    print("cam2world (raw):\n", cam2world)
+    # cam2world[:3, 3] /= 2    
+    cam2world = np.pad(cam2world, ((0,1),(0,0)))
+    cam2world[-1,-1] = 1.
 
-    cam2world_ue = np.float64(camjson['extrinsic_cam2world']).reshape(3, 4)
-    R_ue = cam2world_ue[:, :3]
-    t_ue = cam2world_ue[:, 3]
-    M_UE_to_CV = np.array([[0, 1,  0],
-                        [0, 0, -1],
-                        [1, 0,  0]], dtype=np.float64)
-
-    R_cv = M_UE_to_CV @ R_ue @ M_UE_to_CV.T
-    t_cv = M_UE_to_CV @ t_ue
-
-    cam2world = np.eye(4, dtype=np.float64)
-    cam2world[:3, :3] = R_cv
-    cam2world[:3, 3] = t_cv
-    # cam2world[1,:] = -cam2world[1,:] # OpenCV Y轴向下，UE Y轴向上
-
-
-    # cam2world[:3, 3] *= 1.1
+    # cam2world[:3, 3] *= 3
     # conversion_matrix = np.array([
     #     [0,  1,  0, 0],
     #     [0,  0,  -1, 0],

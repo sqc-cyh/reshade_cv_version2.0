@@ -109,6 +109,9 @@
     <ClCompile Include="..\gcv_games\AssassinsCreedOdyssey.cpp">
       <Filter>gcv_games</Filter>
     </ClCompile>
+    <ClCompile Include="..\gcv_games\AssassinsCreedOrigin.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
     <ClCompile Include="ffmpeg_pipe_win.cpp">
       <Filter>gcv_reshade</Filter>
     </ClCompile>
