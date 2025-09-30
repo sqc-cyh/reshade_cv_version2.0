@@ -136,6 +136,12 @@
     <ClCompile Include="..\gcv_games\GTAV.cpp">
       <Filter>gcv_games</Filter>
     </ClCompile>
+    <ClCompile Include="..\gcv_games\RDR2.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\RoR2.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdparty\concurrentqueue.h">
@@ -325,6 +331,12 @@
       <Filter>gcv_reshade</Filter>
     </ClInclude>
     <ClInclude Include="..\gcv_games\GTAV.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\RDR2.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\RoR2.h">
       <Filter>gcv_games</Filter>
     </ClInclude>
   </ItemGroup>

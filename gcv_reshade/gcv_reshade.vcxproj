@@ -122,7 +122,9 @@
     <ClCompile Include="..\gcv_games\game_with_camera_data_in_one_dll.cpp" />
     <ClCompile Include="..\gcv_games\GTAV.cpp" />
     <ClCompile Include="..\gcv_games\HorizonZeroDawn.cpp" />
+    <ClCompile Include="..\gcv_games\RDR2.cpp" />
     <ClCompile Include="..\gcv_games\ResidentEvils.cpp" />
+    <ClCompile Include="..\gcv_games\RoR2.cpp" />
     <ClCompile Include="..\gcv_games\Witcher3.cpp" />
     <ClCompile Include="..\gcv_utils\camera_data_struct.cpp" />
     <ClCompile Include="..\gcv_utils\depth_utils.cpp" />
@@ -175,7 +177,9 @@
     <ClInclude Include="..\gcv_games\game_with_camera_data_in_one_dll.h" />
     <ClInclude Include="..\gcv_games\GTAV.h" />
     <ClInclude Include="..\gcv_games\HorizonZeroDawn.h" />
+    <ClInclude Include="..\gcv_games\RDR2.h" />
     <ClInclude Include="..\gcv_games\ResidentEvils.h" />
+    <ClInclude Include="..\gcv_games\RoR2.h" />
     <ClInclude Include="..\gcv_games\Witcher3.h" />
     <ClInclude Include="..\gcv_utils\assert_utils.hpp" />
     <ClInclude Include="..\gcv_utils\camera_data_struct.h" />
