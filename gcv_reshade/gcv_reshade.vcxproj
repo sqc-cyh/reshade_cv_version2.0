@@ -114,6 +114,9 @@
     <ClCompile Include="..\gcv_games\DishonoredDOTO.cpp" />
     <ClCompile Include="..\gcv_games\AssassinsCreedOdyssey.cpp" />
     <ClCompile Include="..\gcv_games\AssassinsCreedOrigin.cpp" />
+    <ClCompile Include="..\gcv_games\AssassinsCreedShadows.cpp" />
+    <ClCompile Include="..\gcv_games\AssassinsCreedValhalla.cpp" />
+    <ClCompile Include="..\gcv_games\HogwartsLegacy.cpp" />
     <ClCompile Include="..\gcv_games\game_interface.cpp" />
     <ClCompile Include="..\gcv_games\game_interface_factory.cpp" />
     <ClCompile Include="..\gcv_games\game_with_camera_data_in_one_dll.cpp" />
