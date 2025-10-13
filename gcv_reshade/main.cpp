@@ -193,20 +193,20 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
 
     // 第一行：R_cv_final[0][0] (R11), R_cv_final[0][1] (R12), R_cv_final[0][2] (R13), t_cv_final[0] (Tx)
     g_camera_data_buffer[2] = R_cv_final[0][0];
-    g_camera_data_buffer[3] = R_cv_final[0][1];
-    g_camera_data_buffer[4] = R_cv_final[0][2];
+    g_camera_data_buffer[3] = -R_cv_final[0][1];
+    g_camera_data_buffer[4] = -R_cv_final[0][2];
     g_camera_data_buffer[5] = t_cv_final[0];
 
     // 第二行：R_cv_final[1][0] (R21), R_cv_final[1][1] (R22), R_cv_final[1][2] (R23), t_cv_final[1] (Ty)
     g_camera_data_buffer[6] = R_cv_final[1][0];
-    g_camera_data_buffer[7] = R_cv_final[1][1];
-    g_camera_data_buffer[8] = R_cv_final[1][2];
+    g_camera_data_buffer[7] = -R_cv_final[1][1];
+    g_camera_data_buffer[8] = -R_cv_final[1][2];
     g_camera_data_buffer[9] = t_cv_final[1];
 
     // 第三行：R_cv_final[2][0] (R31), R_cv_final[2][1] (R32), R_cv_final[2][2] (R33), t_cv_final[2] (Tz)
     g_camera_data_buffer[10] = R_cv_final[2][0];
-    g_camera_data_buffer[11] = R_cv_final[2][1];
-    g_camera_data_buffer[12] = R_cv_final[2][2];
+    g_camera_data_buffer[11] = -R_cv_final[2][1];
+    g_camera_data_buffer[12] = -R_cv_final[2][2];
     g_camera_data_buffer[13] = t_cv_final[2];
 
     // FOV和哈希计算（保持C++原有逻辑不变）
@@ -539,6 +539,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 						reshade::log_message(reshade::log_level::info,
 						("Frame skipped1111: Δt=%lld us", std::to_string(delta_us_depth1).c_str()));
 					}	
+
 				if (shdata.save_texture_image_needing_resource_barrier_copy(basefilen + std::string("depth"),
 					ImageWriter_STB_png | ImageWriter_epr | ImageWriter_numpy | (shdata.game_knows_depthbuffer() ? ImageWriter_fpzip : 0),
 					cmdqueue, genericdepdata.selected_depth_stencil, TexInterp_Depth))

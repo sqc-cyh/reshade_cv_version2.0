@@ -167,6 +167,10 @@
     <ClInclude Include="..\3rdparty\fpzip\types.h" />
     <ClInclude Include="..\3rdparty\fpzip\write.h" />
     <ClInclude Include="..\3rdparty\stb_image_write.h" />
+    <ClInclude Include="..\gcv_games\AssassinsCreedOdyssey.h" />
+    <ClInclude Include="..\gcv_games\AssassinsCreedOrigin.h" />
+    <ClInclude Include="..\gcv_games\AssassinsCreedShadows.h" />
+    <ClInclude Include="..\gcv_games\AssassinsCreedValhalla.h" />
     <ClInclude Include="..\gcv_games\Control.h" />
     <ClInclude Include="..\gcv_games\Crysis.h" />
     <ClInclude Include="..\gcv_games\Cyberpunk2077.h" />

@@ -41,29 +41,29 @@ def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     return pts_cam, uu.reshape(-1), vv.reshape(-1)
 
 # -------------------------- 从extrinsic_cam2world解析UE→OpenCV转换 --------------------------
-# def ue_cam2world_to_cv(ue_cam2world, pose_scale=1.0):
+# def cam2world_to_cv(cam2world, pose_scale=1.0):
 #     """
 #     将UE的3x4相机矩阵转换为OpenCV系c2w矩阵
-#     ue_cam2world: 3x4数组，格式为[R_ue(3x3) | t_ue(3x1)]
+#     cam2world: 3x4数组，格式为[R_ue(3x3) | t_ue(3x1)]
 #     """
 #     # 1. 提取UE系旋转和平移
-#     R_ue = ue_cam2world[:, :3]  # 3x3旋转矩阵（UE系）
-#     t_ue = ue_cam2world[:, 3]   # 3x1平移向量（UE系，未缩放）
+#     R_ue = cam2world[:, :3]  # 3x3旋转矩阵（UE系）
+#     t_ue = cam2world[:, 3]   # 3x1平移向量（UE系，未缩放）
     
 #     # 2. 应用缩放（与正确脚本的pose_scale一致）
-#     t_ue_scaled = t_ue * pose_scale
+#     t_scaled = t_ue * pose_scale
     
-#     # 3. UE→OpenCV轴映射（与正确脚本的M_UE_to_CV一致）
-#     M_UE_to_CV = np.array([[0, 1,  0],
+#     # 3. UE→OpenCV轴映射（与正确脚本的M_to_CV一致）
+#     M_to_CV = np.array([[0, 1,  0],
 #                            [0, 0, -1],
 #                            [1, 0,  0]], dtype=np.float64)
 #     # 旋转矩阵转换
-#     R_cv = M_UE_to_CV @ R_ue @ M_UE_to_CV.T
+#     R_cv = M_to_CV @ R_ue @ M_to_CV.T
 #     # 平移向量转换（分量对应与正确脚本一致）
 #     t_cv = np.array([
-#         t_ue_scaled[2],  # OpenCV X = UE X（前方向）
-#         t_ue_scaled[1],  # OpenCV Y = UE Z（上方向）
-#         t_ue_scaled[0]   # OpenCV Z = UE Y（右方向）
+#         t_scaled[2],  # OpenCV X = UE X（前方向）
+#         t_scaled[1],  # OpenCV Y = UE Z（上方向）
+#         t_scaled[0]   # OpenCV Z = UE Y（右方向）
 #     ], dtype=np.float64)
     
 #     # 4. 构造4x4 c2w矩阵
@@ -72,14 +72,14 @@ def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
 #     c2w[:3, 3] = t_cv
 #     return c2w, R_cv, t_cv
 
-def ue_cam2world_to_cv_unchanged(ue_cam2world, pose_scale=1.0):
+def cam2world_to_cv_unchanged(cam2world, pose_scale=1.0):
     """
     将UE的3x4相机矩阵转换为OpenCV系c2w矩阵
-    ue_cam2world: 3x4数组，格式为[R_ue(3x3) | t_ue(3x1)]
+    cam2world: 3x4数组，格式为[R_ue(3x3) | t_ue(3x1)]
     """
     # 1. 提取UE系旋转和平移
-    R_cv = ue_cam2world[:, :3]  # 3x3旋转矩阵（UE系）
-    t_cv = ue_cam2world[:, 3]   # 3x1平移向量（UE系，未缩放）
+    R_cv = cam2world[:, :3]  # 3x3旋转矩阵（UE系）
+    t_cv = cam2world[:, 3]   # 3x1平移向量（UE系，未缩放）
     
     # 4. 构造4x4 c2w矩阵
     c2w = np.eye(4, dtype=np.float64)
@@ -165,10 +165,10 @@ def load_cloud_via_meta(depthfile:str,
 
     # 1. 从相机数据读取参数（camera.json和meta.json结构一致）
     fov_v_deg = float(cam_data['fov_v_degrees'])  # 垂直FOV
-    ue_cam2world = np.array(cam_data['extrinsic_cam2world'], dtype=np.float64).reshape(3, 4)  # 3x4相机矩阵
-    print("ue_cam2world:\n", ue_cam2world)
+    cam2world = np.array(cam_data['extrinsic_cam2world'], dtype=np.float64).reshape(3, 4)  # 3x4相机矩阵
+    print("cam2world:\n", cam2world)
     # 2. 转换为OpenCV系c2w矩阵（与正确脚本对齐）
-    c2w, R_cv, t_cv = ue_cam2world_to_cv_unchanged(ue_cam2world, pose_scale)
+    c2w, R_cv, t_cv = cam2world_to_cv_unchanged(cam2world, pose_scale)
     print(f"[DEBUG] 帧 {depthbnam} 的c2w矩阵:\n{c2w}")
 
     # 3. 计算内参（用垂直FOV，与正确脚本逻辑一致）
@@ -241,6 +241,79 @@ def visualize_clouds(clouds):
         o3dcloud.colors = open3d.utility.Vector3dVector(np.concatenate(colors))
     open3d.visualization.draw([o3dcloud])
 
+
+def add_camera_global_axis(merged_cloud, valid_clouds):
+    # hyperparameter
+    # N_global = 100 # number of points for global XYZ
+    max_global = 100
+    N_camera = 2000 # number of points for camera xyz
+    max_camera = 10
+
+    # visualize the global XYZ
+    # global_x = np.zeros((N_global, 3))
+    # global_x[:,0] = np.linspace(0, max_global, N_global)
+    # global_x_color = np.zeros(global_x.shape)
+    # global_x_color[:,0] = 1
+
+    # global_y = np.zeros((N_global, 3))
+    # global_y[:,1] = np.linspace(0, max_global, N_global)
+    # global_y_color = np.zeros(global_y.shape)
+    # global_y_color[:,1] = 1
+
+    # global_z = np.zeros((N_global, 3))
+    # global_z[:,2] = np.linspace(0, max_global, N_global)
+    # global_z_color = np.zeros(global_z.shape)
+    # global_z_color[:,2] = 1
+
+    c2ws = []
+    for valid_cloud in valid_clouds:
+        c2ws.append(valid_cloud['c2w'][:3, :4])
+    c2ws = np.array(c2ws)
+
+    # visualize the camera xyz
+    camera_centers = c2ws[:,:3,3]
+    camera_centers_color = np.zeros(camera_centers.shape)
+
+    camera_xs = np.linspace(0, max_camera, N_camera).reshape(N_camera, 1, 1)
+    camera_x_dirs = c2ws[:,:3,0]
+    camera_x_dirs = camera_x_dirs.reshape(1, *camera_x_dirs.shape)
+    camera_xs = camera_xs * camera_x_dirs + camera_centers[None]
+    camera_xs = camera_xs.reshape(-1, 3)
+    camera_xs_color = np.zeros(camera_xs.shape)
+    camera_xs_color[:,0] = 255
+
+    camera_ys = np.linspace(0, max_camera, N_camera).reshape(N_camera, 1, 1)
+    camera_y_dirs = c2ws[:,:3,1]
+    camera_y_dirs = camera_y_dirs.reshape(1, *camera_y_dirs.shape)
+    camera_ys = camera_ys * camera_y_dirs + camera_centers[None]
+    camera_ys = camera_ys.reshape(-1, 3)
+    camera_ys_color = np.zeros(camera_ys.shape)
+    camera_ys_color[:,1] = 255
+
+    camera_zs = np.linspace(0, max_camera, N_camera).reshape(N_camera, 1, 1)
+    camera_z_dirs = c2ws[:,:3,2]
+    camera_z_dirs = camera_z_dirs.reshape(1, *camera_z_dirs.shape)
+    camera_zs = camera_zs * camera_z_dirs + camera_centers[None]
+    camera_zs = camera_zs.reshape(-1, 3)
+    camera_zs_color = np.zeros(camera_zs.shape)
+    camera_zs_color[:,2] = 255
+
+    # plots
+    pts = np.concatenate([
+        camera_centers,
+        # global_x, global_y, global_z, 
+        camera_xs, camera_ys, 
+        camera_zs,
+    ], axis=0)
+    colors = np.concatenate([
+        camera_centers_color,
+        # global_x_color, global_y_color, global_z_color, 
+        camera_xs_color, camera_ys_color, 
+        camera_zs_color,
+    ], axis=0).astype(np.uint8)
+    merged_cloud['worldpoints'] = np.concatenate([merged_cloud['worldpoints'], pts])
+    merged_cloud['colors'] = np.concatenate([merged_cloud['colors'], colors])
+
 # -------------------------- 主函数 --------------------------
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -274,6 +347,16 @@ if __name__ == '__main__':
     print(f"✅ 加载{len(valid_clouds)}帧有效点云，合并中...")
     merged_cloud = merge_clouds_world_points(valid_clouds)
     if args.save_to_file:
-        save_cloud_to_file(merged_cloud, args.save_to_file)
+        # save_cloud_to_file(merged_cloud, args.save_to_file)
         print(f"💾 点云已保存至: {args.save_to_file}")
+    
+    add_camera_global_axis(merged_cloud, valid_clouds)
+
+
+    
+    
+    
+    
+    
+    
     visualize_clouds(merged_cloud)

@@ -22,6 +22,30 @@ T ceil_int(T x, T y) {
 void depth_gray_bytesLE_to_f32(simple_packed_buf &dstBuf, const resource_desc &desc, const subresource_data &data,
 							size_t hint_srcbytes, size_t hint_srcbyteskeep, int hint_pitchadjusthack,
 							GameInterface* gamehandle, const depth_tex_settings &settings) {
+
+	//// ??????????????
+	//uint8_t* debug_ptr = static_cast<uint8_t*>(data.data);
+	//size_t non_zero_pixels = 0;
+	//size_t total_pixels = desc.texture.width * desc.texture.height;
+
+	//for (size_t y = 0; y < desc.texture.height; y++) {
+	//	for (size_t x = 0; x < desc.texture.width; x++) {
+	//		size_t offset = y * data.row_pitch + x * 8;
+	//		bool pixel_has_data = false;
+	//		for (size_t z = 0; z < 4; z++) { // ????4???????
+	//			if (debug_ptr[offset + z] != 0) {
+	//				pixel_has_data = true;
+	//				break;
+	//			}
+	//		}
+	//		if (pixel_has_data) non_zero_pixels++;
+	//	}
+	//}
+	//reshade::log_message(reshade::log_level::error,
+	//	std::string("Non-zero pixels: " + std::to_string(non_zero_pixels) +
+	//		" / " + std::to_string(total_pixels)).c_str());
+
+
 	if (dstBuf.pixfmt != BUF_PIX_FMT_GRAYF32) {
 		reshade::log_message(reshade::log_level::error, std::string(std::string("depth_gray_bytesLE_to_f32: dstBuf.pixfmt ") + std::to_string(static_cast<int64_t>(dstBuf.pixfmt))).c_str());
 		return;
@@ -122,7 +146,7 @@ void depth_gray_bytesLE_to_f32(simple_packed_buf &dstBuf, const resource_desc &d
 
 bool copy_texture_image_given_ready_resource_into_packedbuf(
 	GameInterface *gamehandle, simple_packed_buf &dstBuf,
-	const resource_desc &desc, const subresource_data &data,\
+	const resource_desc &desc, const subresource_data &data,
 	TextureInterpretation tex_interp, const depth_tex_settings& depth_settings)
 {
 	dstBuf.width = desc.texture.width;
@@ -398,6 +422,44 @@ bool copy_texture_image_needing_resource_barrier_into_packedbuf(
 	{
 		wasok = copy_texture_image_given_ready_resource_into_packedbuf(gamehandle, dstBuf, desc, mapped_data, tex_interp, depth_settings);
 		device->unmap_texture_region(intermediate, 0);
+
+		////4.????
+		//if (mapped_data.data != nullptr) {
+		//	uint8_t* data_p = static_cast<uint8_t*>(mapped_data.data);
+		//	// ????????????
+		//	size_t bytes_per_pixel = 0;
+		//	switch (desc.texture.format) {
+		//	case reshade::api::format::r32_g8_typeless:
+		//		bytes_per_pixel = 8;  // 64???
+		//		break;
+		//	case reshade::api::format::r8g8b8a8_unorm:
+		//		bytes_per_pixel = 4;  // 32???
+		//		break;
+		//	case reshade::api::format::r32g32b32a32_uint:
+		//		bytes_per_pixel = 16; // 128???
+		//		break;
+		//	default:
+		//		bytes_per_pixel = 4;  // ??32?
+		//		break;
+		//	}
+		//	size_t total_bytes = desc.texture.width * desc.texture.height * bytes_per_pixel;
+		//	size_t non_zero_count = 0;
+
+		//	for (size_t i = 0; i < total_bytes; i++) {
+		//		if (data_p[i] != 0) {
+		//			non_zero_count++;
+		//		}
+		//	}
+
+		//	reshade::log_message(reshade::log_level::error,
+		//		std::string("mapped_data check: Non-zero bytes: " + std::to_string(non_zero_count) +
+		//			" / " + std::to_string(total_bytes) +
+		//			" (" + std::to_string((non_zero_count * 100) / total_bytes) + "%)").c_str());
+		//}
+		//else {
+		//	reshade::log_message(reshade::log_level::error, "mapped_data.data is nullptr!");
+		//}
+
 	} else {
 		reshade::log_message(reshade::log_level::error, "Failed to save texture: mapped_data.data == nullptr");
 	}
