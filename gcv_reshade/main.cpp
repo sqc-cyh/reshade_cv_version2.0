@@ -115,7 +115,7 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
     const float cy = cos(yaw);
     const float sy = sin(yaw);
 
-    // 旋转矩阵 R_ue初始（列向量：right(X)、up(Y)、forward(Z)）
+    // 旋转矩阵初始（列向量：right(X)、up(Y)、forward(Z)）
     float c2w_col_right[3];   // 第一列（right）
     float c2w_col_up[3];      // 第二列（up）
     float c2w_col_forward[3]; // 第三列（forward）
@@ -468,7 +468,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 		}
     }
 
-    if (segmentation_app_update_on_finish_effects(runtime, runtime->is_key_pressed(VK_F11)))
+    if (segmentation_app_update_on_finish_effects(runtime, runtime->is_key_pressed(VK_F12)))
 	{
 		generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
 		reshade::api::command_queue *cmdqueue = runtime->get_command_queue();

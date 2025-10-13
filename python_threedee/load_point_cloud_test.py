@@ -5,7 +5,7 @@ import json
 import math
 import numpy as np
 from PIL import Image
-from save_point_cloud_to_file import save_cloud_to_file
+# from save_point_cloud_to_file import save_cloud_to_file
 from misc_utils import files_glob
 from functools import partial
 from tqdm.contrib.concurrent import process_map
@@ -37,7 +37,7 @@ def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     x = (uu - cx) * z / fx
     y = (vv - cy) * z / fy
     
-    pts_cam = np.stack([x, y, z], axis=-1).reshape(-1, 3)
+    pts_cam = np.stack([x, -y, -z], axis=-1).reshape(-1, 3)
     return pts_cam, uu.reshape(-1), vv.reshape(-1)
 
 # -------------------------- 从extrinsic_cam2world解析UE→OpenCV转换 --------------------------
@@ -241,6 +241,79 @@ def visualize_clouds(clouds):
         o3dcloud.colors = open3d.utility.Vector3dVector(np.concatenate(colors))
     open3d.visualization.draw([o3dcloud])
 
+
+def add_camera_global_axis(merged_cloud, valid_clouds):
+    # hyperparameter
+    # N_global = 100 # number of points for global XYZ
+    max_global = 100
+    N_camera = 2000 # number of points for camera xyz
+    max_camera = 10
+
+    # visualize the global XYZ
+    # global_x = np.zeros((N_global, 3))
+    # global_x[:,0] = np.linspace(0, max_global, N_global)
+    # global_x_color = np.zeros(global_x.shape)
+    # global_x_color[:,0] = 1
+
+    # global_y = np.zeros((N_global, 3))
+    # global_y[:,1] = np.linspace(0, max_global, N_global)
+    # global_y_color = np.zeros(global_y.shape)
+    # global_y_color[:,1] = 1
+
+    # global_z = np.zeros((N_global, 3))
+    # global_z[:,2] = np.linspace(0, max_global, N_global)
+    # global_z_color = np.zeros(global_z.shape)
+    # global_z_color[:,2] = 1
+
+    c2ws = []
+    for valid_cloud in valid_clouds:
+        c2ws.append(valid_cloud['c2w'][:3, :4])
+    c2ws = np.array(c2ws)
+
+    # visualize the camera xyz
+    camera_centers = c2ws[:,:3,3]
+    camera_centers_color = np.zeros(camera_centers.shape)
+
+    camera_xs = np.linspace(0, max_camera, N_camera).reshape(N_camera, 1, 1)
+    camera_x_dirs = c2ws[:,:3,0]
+    camera_x_dirs = camera_x_dirs.reshape(1, *camera_x_dirs.shape)
+    camera_xs = camera_xs * camera_x_dirs + camera_centers[None]
+    camera_xs = camera_xs.reshape(-1, 3)
+    camera_xs_color = np.zeros(camera_xs.shape)
+    camera_xs_color[:,0] = 255
+
+    camera_ys = np.linspace(0, max_camera, N_camera).reshape(N_camera, 1, 1)
+    camera_y_dirs = c2ws[:,:3,1]
+    camera_y_dirs = camera_y_dirs.reshape(1, *camera_y_dirs.shape)
+    camera_ys = camera_ys * camera_y_dirs + camera_centers[None]
+    camera_ys = camera_ys.reshape(-1, 3)
+    camera_ys_color = np.zeros(camera_ys.shape)
+    camera_ys_color[:,1] = 255
+
+    camera_zs = np.linspace(0, max_camera, N_camera).reshape(N_camera, 1, 1)
+    camera_z_dirs = c2ws[:,:3,2]
+    camera_z_dirs = camera_z_dirs.reshape(1, *camera_z_dirs.shape)
+    camera_zs = camera_zs * camera_z_dirs + camera_centers[None]
+    camera_zs = camera_zs.reshape(-1, 3)
+    camera_zs_color = np.zeros(camera_zs.shape)
+    camera_zs_color[:,2] = 255
+
+    # plots
+    pts = np.concatenate([
+        camera_centers,
+        # global_x, global_y, global_z, 
+        camera_xs, camera_ys, 
+        camera_zs,
+    ], axis=0)
+    colors = np.concatenate([
+        camera_centers_color,
+        # global_x_color, global_y_color, global_z_color, 
+        camera_xs_color, camera_ys_color, 
+        camera_zs_color,
+    ], axis=0).astype(np.uint8)
+    merged_cloud['worldpoints'] = np.concatenate([merged_cloud['worldpoints'], pts])
+    merged_cloud['colors'] = np.concatenate([merged_cloud['colors'], colors])
+
 # -------------------------- 主函数 --------------------------
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -274,6 +347,10 @@ if __name__ == '__main__':
     print(f"✅ 加载{len(valid_clouds)}帧有效点云，合并中...")
     merged_cloud = merge_clouds_world_points(valid_clouds)
     if args.save_to_file:
-        save_cloud_to_file(merged_cloud, args.save_to_file)
+        # save_cloud_to_file(merged_cloud, args.save_to_file)
         print(f"💾 点云已保存至: {args.save_to_file}")
+    
+    add_camera_global_axis(merged_cloud, valid_clouds)
+    
+    
     visualize_clouds(merged_cloud)

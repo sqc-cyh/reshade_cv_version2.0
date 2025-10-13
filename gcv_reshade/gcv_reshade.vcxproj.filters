@@ -118,6 +118,9 @@
     <ClCompile Include="..\gcv_games\AssassinsCreedValhalla.cpp">
       <Filter>gcv_games</Filter>
     </ClCompile>
+    <ClCompile Include="..\gcv_games\Borderlands3.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
     <ClCompile Include="..\gcv_games\HogwartsLegacy.cpp">
       <Filter>gcv_games</Filter>
     </ClCompile>

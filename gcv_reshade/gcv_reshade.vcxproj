@@ -116,6 +116,7 @@
     <ClCompile Include="..\gcv_games\AssassinsCreedOrigin.cpp" />
     <ClCompile Include="..\gcv_games\AssassinsCreedShadows.cpp" />
     <ClCompile Include="..\gcv_games\AssassinsCreedValhalla.cpp" />
+    <ClCompile Include="..\gcv_games\Borderlands3.cpp" />
     <ClCompile Include="..\gcv_games\HogwartsLegacy.cpp" />
     <ClCompile Include="..\gcv_games\game_interface.cpp" />
     <ClCompile Include="..\gcv_games\game_interface_factory.cpp" />

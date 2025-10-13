@@ -8,7 +8,7 @@ protected:
 	virtual uint64_t camera_dll_mem_start() const override;
 	virtual GameCamDLLMatrixType camera_dll_matrix_format() const override;
 public:
-	virtual std::string gamename_simpler() const override { return "AssassinsCreedShadGameAssassinsCreedShadows"; }
+	virtual std::string gamename_simpler() const override { return "AssassinsCreedShadows"; }
 	virtual std::string gamename_verbose() const override;
 
 	virtual scriptedcam_checkbuf_funptr get_scriptedcambuf_checkfun() const override;

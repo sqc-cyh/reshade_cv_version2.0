@@ -104,11 +104,11 @@ def load_cloud_via_depth_and_camjson(depthfile:str,
     cam2world = np.pad(cam2world, ((0,1),(0,0)))
     cam2world[-1,-1] = 1.
 
-    # cam2world[:3, 3] *= 3
+    # cam2world[:3, 3] *= 1.1
     # conversion_matrix = np.array([
-    #     [0,  1,  0, 0],
-    #     [0,  0,  -1, 0],
-    #     [1, 0,  0, 0],
+    #     [1,  0,  0, 0],
+    #     [0,  0,  1, 0],
+    #     [0, -1,  0, 0],
     #     [0,  0,  0, 1]
     # ])
     # cam2world = cam2world @ conversion_matrix
@@ -132,31 +132,31 @@ def load_cloud_via_depth_and_camjson(depthfile:str,
         rgb = np.stack([rgb[:,ii][depth_mask_keep] for ii in range(rgb.shape[1])],axis=1)
 
     wpoints = np.ascontiguousarray(np.matmul(screen2world, wpoints).transpose()[:,:3])
-    # GTA -> Open3D 坐标系
-    S1 = np.array([[1, 0,  0],
-                [0, 1, 0],
-                [0, 0,  1]], dtype=np.float64)
-    S2 = np.array([[-1, 0,  0],
-                [0, 1, 0],
-                [0, 0,  1]], dtype=np.float64)        
-    S3 = np.array([[1, 0,  0],
-                [0, -1, 0],
-                [0, 0,  1]], dtype=np.float64)   
-    S4 = np.array([[-1, 0,  0],
-                [0, -1, 0],
-                [0, 0,  1]], dtype=np.float64)
-    S5 = np.array([[0, 1,  0],
-                [1, 0, 0],
-                [0, 0,  1]], dtype=np.float64)
-    S6 = np.array([[0, -1,  0],
-                [1, 0, 0],
-                [0, 0,  1]], dtype=np.float64)
-    S7 = np.array([[0, 1,  0],
-                [-1, 0, 0],
-                [0, 0,  1]], dtype=np.float64)
-    S8 = np.array([[0, -1,  0],
-                [-1, 0, 0],
-                [0, 0,  1]], dtype=np.float64)
+
+    # S1 = np.array([[1, 0,  0],
+    #             [0, 1, 0],
+    #             [0, 0,  1]], dtype=np.float64)
+    # S2 = np.array([[-1, 0,  0],
+    #             [0, 1, 0],
+    #             [0, 0,  1]], dtype=np.float64)        
+    # S3 = np.array([[1, 0,  0],
+    #             [0, -1, 0],
+    #             [0, 0,  1]], dtype=np.float64)   
+    # S4 = np.array([[-1, 0,  0],
+    #             [0, -1, 0],
+    #             [0, 0,  1]], dtype=np.float64)
+    # S5 = np.array([[0, 1,  0],
+    #             [1, 0, 0],
+    #             [0, 0,  1]], dtype=np.float64)
+    # S6 = np.array([[0, -1,  0],
+    #             [1, 0, 0],
+    #             [0, 0,  1]], dtype=np.float64)
+    # S7 = np.array([[0, 1,  0],
+    #             [-1, 0, 0],
+    #             [0, 0,  1]], dtype=np.float64)
+    # S8 = np.array([[0, -1,  0],
+    #             [-1, 0, 0],
+    #             [0, 0,  1]], dtype=np.float64)
     # S = np.array([[1, 0,  0],
     #             [0, 0, -1],
     #             [0, 1,  0]], dtype=np.float64)

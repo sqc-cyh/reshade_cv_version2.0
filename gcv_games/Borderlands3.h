@@ -2,13 +2,13 @@
 // Copyright (C) 2022 Jason Bunk
 #include "game_with_camera_data_in_one_dll.h"
 
-class GameAssassinsCreedValhalla : public GameWithCameraDataInOneDLL {
+class GameBorderlands3 : public GameWithCameraDataInOneDLL {
 protected:
 	virtual std::string camera_dll_name() const override;
 	virtual uint64_t camera_dll_mem_start() const override;
 	virtual GameCamDLLMatrixType camera_dll_matrix_format() const override;
 public:
-	virtual std::string gamename_simpler() const override { return "AssassinsCreedValhalla"; }
+	virtual std::string gamename_simpler() const override { return "Boaderlands3"; }
 	virtual std::string gamename_verbose() const override;
 
 	virtual scriptedcam_checkbuf_funptr get_scriptedcambuf_checkfun() const override;
@@ -20,4 +20,4 @@ public:
     virtual uint64_t get_scriptedcambuf_triggerbytes() const override;
 };
 
-REGISTER_GAME_INTERFACE(GameAssassinsCreedValhalla, 0, "acvalhalla.exe");
+REGISTER_GAME_INTERFACE(GameBorderlands3, 0, "borderlands3.exe");
