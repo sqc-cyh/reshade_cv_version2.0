@@ -342,6 +342,18 @@
     <ClInclude Include="..\gcv_games\RoR2.h">
       <Filter>gcv_games</Filter>
     </ClInclude>
+    <ClInclude Include="..\gcv_games\AssassinsCreedOdyssey.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\AssassinsCreedOrigin.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\AssassinsCreedShadows.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\AssassinsCreedValhalla.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="3rdparty">
