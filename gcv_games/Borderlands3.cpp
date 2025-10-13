@@ -17,7 +17,7 @@ uint64_t GameBorderlands3::get_scriptedcambuf_sizebytes() const {
 	return template_scriptedcambuf_sizebytes<double, 13, 1>();
 }
 bool GameBorderlands3::copy_scriptedcambuf_to_matrix(uint8_t* buf, uint64_t buflen, CamMatrixData& rcam, std::string& errstr) const {
-	return template_copy_scriptedcambuf_extrinsic_cam2world_and_fov<double, 13, 1>(buf, buflen, rcam, true, errstr);
+	return template_copy_scriptedcambuf_extrinsic_cam2world_and_fov<double, 13, 1>(buf, buflen, rcam, false, errstr);
 }
 
 bool GameBorderlands3::can_interpret_depth_buffer() const {
@@ -48,6 +48,104 @@ uint64_t GameBorderlands3::get_scriptedcambuf_triggerbytes() const
     static_assert(sizeof(magic_double) == sizeof(magic_int));
     memcpy(&magic_int, &magic_double, sizeof(magic_int));
     return magic_int;
+}
+
+void GameBorderlands3::process_camera_buffer_from_igcs(
+    double* camera_data_buffer,
+    const float* camera_ue_pos, // 对应 Python 中的 location {x, y, z}
+    float roll, float pitch, float yaw, // 弧度
+    float fov)
+{
+    // --- 严格按照 Python 脚本逻辑重写 ---
+
+    // 步骤 1: 计算 UE 坐标系下的旋转矩阵 R_ue (C2W)
+    // Python 中使用了 -yaw，这里也对 yaw 取反
+    const float neg_yaw = -yaw;
+
+    // 根据 Python 中的 rot_x_lh, rot_y_lh, rot_z_lh 定义
+    const float cr = cos(roll), sr = sin(roll);
+    const float cp = cos(pitch), sp = sin(pitch);
+    const float cz = cos(neg_yaw), sz = sin(neg_yaw);
+
+    // R_x(roll)
+    const float Rx[3][3] = {
+        { 1,  0,   0  },
+        { 0,  cr,  sr },
+        { 0, -sr,  cr }
+    };
+    // R_y(pitch)
+    const float Ry[3][3] = {
+        { cp,  0, -sp },
+        { 0,   1,  0  },
+        { sp,  0,  cp }
+    };
+    // R_z(-yaw)
+    const float Rz[3][3] = {
+        { cz,  sz, 0 },
+        { -sz, cz, 0 },
+        { 0,   0,  1 }
+    };
+
+    // R_ue = Rz @ Ry @ Rx
+    float R_ue_temp[3][3] = {0};
+    float R_ue[3][3] = {0};
+    // R_ue_temp = Rz @ Ry
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) for (int k = 0; k < 3; ++k)
+        R_ue_temp[i][j] += Rz[i][k] * Ry[k][j];
+    // R_ue = R_ue_temp @ Rx
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) for (int k = 0; k < 3; ++k)
+        R_ue[i][j] += R_ue_temp[i][k] * Rx[k][j];
+
+    // 步骤 2: 将 R_ue 转换到 OpenCV 坐标系
+    // R_cv = M_UE_to_CV @ R_ue @ M_UE_to_CV.T
+    const float M_UE_to_CV[3][3] = {
+        { 0, 1,  0 },
+        { 0, 0, -1 },
+        { 1, 0,  0 }
+    };
+    const float M_UE_to_CV_T[3][3] = {
+        { 0, 0, 1 },
+        { 1, 0, 0 },
+        { 0,-1, 0 }
+    };
+
+    float R_cv_temp[3][3] = {0};
+    float R_cv[3][3] = {0};
+    // R_cv_temp = R_ue @ M_UE_to_CV.T
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) for (int k = 0; k < 3; ++k)
+        R_cv_temp[i][j] += R_ue[i][k] * M_UE_to_CV_T[k][j];
+    // R_cv = M_UE_to_CV @ R_cv_temp
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) for (int k = 0; k < 3; ++k)
+        R_cv[i][j] += M_UE_to_CV[i][k] * R_cv_temp[k][j];
+
+    // 步骤 3: 转换并缩放平移向量 t_cv
+    // t_cv = [location.z, location.y, location.x] / 100.0
+    // camera_ue_pos[0] = x, [1] = y, [2] = z
+    const float scale = 0.01f; // 1/100
+    const float t_cv[3] = {
+        camera_ue_pos[1] * scale, // t_cv[0] = y
+        -camera_ue_pos[2] * scale, // t_cv[1] = -z
+        camera_ue_pos[0] * scale  // t_cv[2] = x
+    };
+
+    // 步骤 4: 将最终的 c2w (R_cv, t_cv) 矩阵填充到缓冲区
+    // 第一行
+    camera_data_buffer[2] = R_cv[0][0];
+    camera_data_buffer[3] = -R_cv[0][1];
+    camera_data_buffer[4] = -R_cv[0][2];
+    camera_data_buffer[5] = t_cv[0];
+    // 第二行
+    camera_data_buffer[6] = R_cv[1][0];
+    camera_data_buffer[7] = -R_cv[1][1];
+    camera_data_buffer[8] = -R_cv[1][2];
+    camera_data_buffer[9] = t_cv[1];
+    // 第三行
+    camera_data_buffer[10] = R_cv[2][0];
+    camera_data_buffer[11] = -R_cv[2][1];
+    camera_data_buffer[12] = -R_cv[2][2];
+    camera_data_buffer[13] = t_cv[2];
+    // FOV
+    camera_data_buffer[14] = fov;
 }
 
 

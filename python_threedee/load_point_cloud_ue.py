@@ -5,7 +5,7 @@ import json
 import math
 import numpy as np
 from PIL import Image
-from save_point_cloud_to_file import save_cloud_to_file
+# from save_point_cloud_to_file import save_cloud_to_file
 from misc_utils import files_glob
 from functools import partial
 from tqdm.contrib.concurrent import process_map
@@ -26,6 +26,16 @@ def make_K_from_fovy(fovy_deg, W, H, aspect_ratio=None):
     cy = (H - 1) / 2.0
     return fx, fy, cx, cy
 
+def make_K_from_fovx(fovx_deg, W, H, aspect_ratio=None):
+    if aspect_ratio is None:
+        aspect_ratio = W / H
+    fovx = d2r(fovx_deg)
+    fx = (W * 0.5) / math.tan(fovx * 0.5)
+    v = 2.0 * math.atan(math.tan(fovx * 0.5) / aspect_ratio)
+    fy = (H * 0.5) / math.tan(v * 0.5)
+    cx = (W - 1) / 2.0
+    cy = (H - 1) / 2.0
+    return fx, fy, cx, cy
 def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     """像素→相机系反投影（与正确脚本一致）"""
     H, W = depth.shape[:2]
@@ -89,7 +99,7 @@ def cam2world_to_cv_unchanged(cam2world, pose_scale=1.0):
 
 # -------------------------- 加载深度和相机文件（优先camera.json，再找meta.json） --------------------------
 def load_depth_and_meta(depthfile:str, and_rgb:bool):
-    """适配逻辑：优先查找camera.json，不存在则查找meta.json，均需含extrinsic_cam2world和fov_v_degrees"""
+    """适配逻辑：优先查找camera.json，不存在则查找meta.json，均需含extrinsic_cam2world和fov_h_degrees"""
     # 1. 解析深度文件
     if depthfile.endswith('_depth.npy'):
         depthbnam = depthfile[:-len('_depth.npy')]
@@ -126,7 +136,7 @@ def load_depth_and_meta(depthfile:str, and_rgb:bool):
             cam_data = json.load(f)
     
     # 3. 验证相机文件必要字段（两种文件统一验证标准）
-    required_keys = ['extrinsic_cam2world', 'fov_v_degrees']
+    required_keys = ['extrinsic_cam2world', 'fov_h_degrees']
     for k in required_keys:
         if k not in cam_data:
             print(f"[警告] {os.path.basename(cam_file)}缺少字段'{k}': {sorted(cam_data.keys())}")
@@ -164,7 +174,7 @@ def load_cloud_via_meta(depthfile:str,
     aspect_ratio = W / H
 
     # 1. 从相机数据读取参数（camera.json和meta.json结构一致）
-    fov_v_deg = float(cam_data['fov_v_degrees'])  # 垂直FOV
+    fov_h_deg = float(cam_data['fov_h_degrees'])  # 垂直FOV
     cam2world = np.array(cam_data['extrinsic_cam2world'], dtype=np.float64).reshape(3, 4)  # 3x4相机矩阵
     print("cam2world:\n", cam2world)
     # 2. 转换为OpenCV系c2w矩阵（与正确脚本对齐）
@@ -172,7 +182,7 @@ def load_cloud_via_meta(depthfile:str,
     print(f"[DEBUG] 帧 {depthbnam} 的c2w矩阵:\n{c2w}")
 
     # 3. 计算内参（用垂直FOV，与正确脚本逻辑一致）
-    fx, fy, cx, cy = make_K_from_fovy(fov_v_deg, W, H, aspect_ratio)
+    fx, fy, cx, cy = make_K_from_fovx(fov_h_deg, W, H, aspect_ratio)
     print(f"[DEBUG] 内参: fx={fx:.2f}, fy={fy:.2f}, cx={cx:.2f}, cy={cy:.2f}")
 
     # 4. 点云反投影
@@ -351,12 +361,6 @@ if __name__ == '__main__':
         print(f"💾 点云已保存至: {args.save_to_file}")
     
     add_camera_global_axis(merged_cloud, valid_clouds)
-
-
-    
-    
-    
-    
     
     
     visualize_clouds(merged_cloud)

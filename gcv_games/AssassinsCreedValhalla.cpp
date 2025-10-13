@@ -50,4 +50,63 @@ uint64_t GameAssassinsCreedValhalla::get_scriptedcambuf_triggerbytes() const
     return magic_int;
 }
 
+void GameAssassinsCreedValhalla::process_camera_buffer_from_igcs(
+    double* camera_data_buffer,
+    const float* camera_ue_pos,
+    float roll, float pitch, float yaw,
+    float fov)
+{
+    
+    // --- 将 main.cpp 中的原始逻辑移动到这里作为默认实现 ---
+    const float cr = cos(roll), sr = sin(roll);
+    const float cp = cos(pitch), sp = sin(pitch);
+    const float cy = cos(yaw), sy = sin(yaw);
 
+    float c2w_col_right[3] = { cy * cp, -sy * cp, sp };
+    float c2w_col_up[3] = { cy * sp * sr + sy * cr, -sy * sp * sr + cy * cr, -cp * sr };
+    float c2w_col_forward[3] = { -cy * sp * cr + sy * sr, sy * sp * cr + cy * sr, cp * cr };
+    
+    float camera_target_pos[3] = { camera_ue_pos[1], -camera_ue_pos[2], camera_ue_pos[0] };
+    const float pose_scale = 1.0f; 
+
+    float R_ue_matrix[3][3] = {
+        { c2w_col_right[0], c2w_col_up[0], c2w_col_forward[0] },
+        { c2w_col_right[1], c2w_col_up[1], c2w_col_forward[1] },
+        { c2w_col_right[2], c2w_col_up[2], c2w_col_forward[2] }
+    };
+
+    const float M_UE_to_CV[3][3] = { { 0, 1, 0 }, { 0, 0, -1 }, { 1, 0, 0 } };
+    const float M_T[3][3] = { { 0, 0, 1 }, { 1, 0, 0 }, { 0, -1, 0 } };
+
+    float temp_matrix[3][3] = { 0.0f };
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) for (int k = 0; k < 3; ++k)
+        temp_matrix[i][j] += R_ue_matrix[i][k] * M_T[k][j];
+
+    float R_cv_final[3][3] = { 0.0f };
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) for (int k = 0; k < 3; ++k)
+        R_cv_final[i][j] += M_UE_to_CV[i][k] * temp_matrix[k][j];
+
+    float t_cv_final[3] = {
+        camera_target_pos[2] * pose_scale,
+        camera_target_pos[1] * pose_scale,
+        camera_target_pos[0] * pose_scale
+    };
+
+    camera_data_buffer[2] = R_cv_final[0][0]; 
+    camera_data_buffer[3] = -R_cv_final[0][1]; 
+    camera_data_buffer[4] = -R_cv_final[0][2]; 
+    camera_data_buffer[5] = t_cv_final[0];
+
+    camera_data_buffer[6] = R_cv_final[1][0]; 
+    camera_data_buffer[7] = -R_cv_final[1][1]; 
+    camera_data_buffer[8] = -R_cv_final[1][2]; 
+    camera_data_buffer[9] = t_cv_final[1];
+
+    camera_data_buffer[10] = R_cv_final[2][0]; 
+    camera_data_buffer[11] = -R_cv_final[2][1]; 
+    camera_data_buffer[12] = -R_cv_final[2][2]; 
+    camera_data_buffer[13] = t_cv_final[2];
+    
+    camera_data_buffer[14] = fov;
+    
+}

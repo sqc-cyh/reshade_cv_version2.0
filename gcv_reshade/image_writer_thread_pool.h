@@ -37,7 +37,10 @@ public:
 	std::string gamename_simpler();
 	std::string gamename_verbose();
 	bool get_camera_matrix(CamMatrixData &rcam, std::string &errstr);
-
+	GameInterface* get_game_interface() {
+        init_on_startup(); // 确保 game 实例已初始化
+        return game;
+    }
 	std::string output_filepath_creates_outdir_if_needed(const std::string &base_filename);
 
 	~image_writer_thread_pool();

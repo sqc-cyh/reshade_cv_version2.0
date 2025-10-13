@@ -18,6 +18,7 @@ public:
 	virtual bool can_interpret_depth_buffer() const override;
 	virtual float convert_to_physical_distance_depth_u64(uint64_t depthval) const override;
     virtual uint64_t get_scriptedcambuf_triggerbytes() const override;
+	virtual void process_camera_buffer_from_igcs(double* camera_data_buffer, const float* camera_ue_pos, float roll, float pitch, float yaw, float fov) override;
 };
 
 REGISTER_GAME_INTERFACE(GameBorderlands3, 0, "borderlands3.exe");

@@ -422,44 +422,6 @@ bool copy_texture_image_needing_resource_barrier_into_packedbuf(
 	{
 		wasok = copy_texture_image_given_ready_resource_into_packedbuf(gamehandle, dstBuf, desc, mapped_data, tex_interp, depth_settings);
 		device->unmap_texture_region(intermediate, 0);
-
-		////4.????
-		//if (mapped_data.data != nullptr) {
-		//	uint8_t* data_p = static_cast<uint8_t*>(mapped_data.data);
-		//	// ????????????
-		//	size_t bytes_per_pixel = 0;
-		//	switch (desc.texture.format) {
-		//	case reshade::api::format::r32_g8_typeless:
-		//		bytes_per_pixel = 8;  // 64???
-		//		break;
-		//	case reshade::api::format::r8g8b8a8_unorm:
-		//		bytes_per_pixel = 4;  // 32???
-		//		break;
-		//	case reshade::api::format::r32g32b32a32_uint:
-		//		bytes_per_pixel = 16; // 128???
-		//		break;
-		//	default:
-		//		bytes_per_pixel = 4;  // ??32?
-		//		break;
-		//	}
-		//	size_t total_bytes = desc.texture.width * desc.texture.height * bytes_per_pixel;
-		//	size_t non_zero_count = 0;
-
-		//	for (size_t i = 0; i < total_bytes; i++) {
-		//		if (data_p[i] != 0) {
-		//			non_zero_count++;
-		//		}
-		//	}
-
-		//	reshade::log_message(reshade::log_level::error,
-		//		std::string("mapped_data check: Non-zero bytes: " + std::to_string(non_zero_count) +
-		//			" / " + std::to_string(total_bytes) +
-		//			" (" + std::to_string((non_zero_count * 100) / total_bytes) + "%)").c_str());
-		//}
-		//else {
-		//	reshade::log_message(reshade::log_level::error, "mapped_data.data is nullptr!");
-		//}
-
 	} else {
 		reshade::log_message(reshade::log_level::error, "Failed to save texture: mapped_data.data == nullptr");
 	}

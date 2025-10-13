@@ -25,6 +25,16 @@ def make_K_from_fovy(fovy_deg, W, H, aspect_ratio=None):
     cx = (W - 1) / 2.0
     cy = (H - 1) / 2.0
     return fx, fy, cx, cy
+def make_K_from_fovx(fovx_deg, W, H, aspect_ratio=None):
+    if aspect_ratio is None:
+        aspect_ratio = W / H
+    fovx = d2r(fovx_deg)
+    fx = (W * 0.5) / math.tan(fovx * 0.5)
+    v = 2.0 * math.atan(math.tan(fovx * 0.5) / aspect_ratio)
+    fy = (H * 0.5) / math.tan(v * 0.5)
+    cx = (W - 1) / 2.0
+    cy = (H - 1) / 2.0
+    return fx, fy, cx, cy
 
 def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     """像素→相机系反投影（与正确脚本一致）"""
@@ -37,7 +47,7 @@ def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     x = (uu - cx) * z / fx
     y = (vv - cy) * z / fy
     
-    pts_cam = np.stack([x, -y, -z], axis=-1).reshape(-1, 3)
+    pts_cam = np.stack([x, y, z], axis=-1).reshape(-1, 3)
     return pts_cam, uu.reshape(-1), vv.reshape(-1)
 
 # -------------------------- 从extrinsic_cam2world解析UE→OpenCV转换 --------------------------
@@ -172,7 +182,7 @@ def load_cloud_via_meta(depthfile:str,
     print(f"[DEBUG] 帧 {depthbnam} 的c2w矩阵:\n{c2w}")
 
     # 3. 计算内参（用垂直FOV，与正确脚本逻辑一致）
-    fx, fy, cx, cy = make_K_from_fovy(fov_v_deg, W, H, aspect_ratio)
+    fx, fy, cx, cy = make_K_from_fovx(fov_v_deg, W, H, aspect_ratio)
     print(f"[DEBUG] 内参: fx={fx:.2f}, fy={fy:.2f}, cx={cx:.2f}, cy={cy:.2f}")
 
     # 4. 点云反投影

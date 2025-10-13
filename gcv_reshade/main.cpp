@@ -36,7 +36,7 @@ using Json = nlohmann::json_abi_v3_12_0::json;
 static double g_camera_data_buffer[17] = {
 	1.20040525131452021e-12,// 第二个魔数签名
     // 1.38097189588312856e-12, 
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    0.0, 0.0, 0.0, 0.0, 0.0, 980.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 };
 static double g_camera_buffer_counter = 0.0;
 
@@ -85,6 +85,8 @@ bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name,
 
 void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
 {
+    auto& shdata = runtime->get_device()->get_private_data<image_writer_thread_pool>();
+
     bool available = false;
     if (!read_uniform_value(runtime, "IGCS_cameraDataAvailable", available) || !available)
     {
@@ -95,122 +97,36 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
         return;
     }
 
+    // 1. 从 IGCS 读取原始相机数据
     float fov = 0.0f;
     float camera_ue_pos[3] = {0.0f};  // UE坐标系下的位置 (+X前, +Y右, +Z上)
-    // 读取欧拉角 (IGCS 提供的是弧度)
-    float roll = 0.0f, pitch = 0.0f, yaw = 0.0f;
+    float roll = 0.0f, pitch = 0.0f, yaw = 0.0f; // 弧度
 
     read_uniform_value(runtime, "IGCS_cameraFoV", fov);
     read_uniform_value(runtime, "IGCS_cameraWorldPosition", camera_ue_pos, 3);
-    // 读取欧拉角
     read_uniform_value(runtime, "IGCS_cameraRotationRoll", roll);
     read_uniform_value(runtime, "IGCS_cameraRotationPitch", pitch);
     read_uniform_value(runtime, "IGCS_cameraRotationYaw", yaw);
 
-    // 按 ZYX 顺序计算初始旋转矩阵 R_ue 和初始平移 t_ue ---
-    const float cr = cos(roll);
-    const float sr = sin(roll);
-    const float cp = cos(pitch);
-    const float sp = sin(pitch);
-    const float cy = cos(yaw);
-    const float sy = sin(yaw);
+    // 2. 获取特定于游戏的接口实例
+    auto* game_interface = shdata.get_game_interface();
 
-    // 旋转矩阵初始（列向量：right(X)、up(Y)、forward(Z)）
-    float c2w_col_right[3];   // 第一列（right）
-    float c2w_col_up[3];      // 第二列（up）
-    float c2w_col_forward[3]; // 第三列（forward）
-
-    // Right vector (X轴)
-    c2w_col_right[0] = cy * cp;
-    c2w_col_right[1] = -sy * cp;
-    c2w_col_right[2] = sp;
-
-    // Up vector (Y轴)
-    c2w_col_up[0] = cy * sp * sr + sy * cr;
-    c2w_col_up[1] = -sy * sp * sr + cy * cr;
-    c2w_col_up[2] = -cp * sr;
-
-    // Forward vector (Z轴)
-    c2w_col_forward[0] = -cy * sp * cr + sy * sr;
-    c2w_col_forward[1] = sy * sp * cr + cy * sr;
-    c2w_col_forward[2] = cp * cr;
-    
-    // 平移向量 t_ue初始（UE位置→初始目标系）
-    float camera_target_pos[3];
-    camera_target_pos[0] = camera_ue_pos[1];  // 目标x = UE Y (右)
-    camera_target_pos[1] = -camera_ue_pos[2]; // 目标y = -UE Z (下)
-    camera_target_pos[2] = camera_ue_pos[0];  // 目标z = UE X (前)
-
-    const float pose_scale = 1.0f; 
-
-    float R_ue_matrix[3][3] = {
-        { c2w_col_right[0],  c2w_col_up[0],  c2w_col_forward[0] }, // 第0行（R11, R12, R13）
-        { c2w_col_right[1],  c2w_col_up[1],  c2w_col_forward[1] }, // 第1行（R21, R22, R23）
-        { c2w_col_right[2],  c2w_col_up[2],  c2w_col_forward[2] }  // 第2行（R31, R32, R33）
-    };
-
-    const float M_UE_to_CV[3][3] = {
-        { 0.0f, 1.0f, 0.0f },
-        { 0.0f, 0.0f, -1.0f },
-        { 1.0f, 0.0f, 0.0f }
-    };
- 
-    const float M_T[3][3] = {
-        { 0.0f, 0.0f, 1.0f },  // M的第0列→M_T的第0行
-        { 1.0f, 0.0f, 0.0f },  // M的第1列→M_T的第1行
-        { 0.0f, -1.0f, 0.0f }  // M的第2列→M_T的第2行
-    };
-
-    float temp_matrix[3][3] = { 0.0f }; // 临时矩阵：R_ue_matrix @ M_T
-    float R_cv_final[3][3] = { 0.0f };  // 最终旋转矩阵
-
-    for (int i = 0; i < 3; ++i) { // temp_matrix的行
-        for (int j = 0; j < 3; ++j) { // temp_matrix的列
-            for (int k = 0; k < 3; ++k) { // 累加维度
-                temp_matrix[i][j] += R_ue_matrix[i][k] * M_T[k][j];
-            }
-        }
+    // 3. 调用游戏特定的后处理函数
+    if (game_interface)
+    {
+        game_interface->process_camera_buffer_from_igcs(g_camera_data_buffer, camera_ue_pos, roll, pitch, yaw, fov);
+    }
+    else
+    {
+        // 如果没有找到游戏接口，清空数据以避免发送脏数据
+        for (int i = 2; i <= 14; ++i) g_camera_data_buffer[i] = 0.0;
     }
 
- 
-    for (int i = 0; i < 3; ++i) { // R_cv_final的行
-        for (int j = 0; j < 3; ++j) { // R_cv_final的列
-            for (int k = 0; k < 3; ++k) { // 累加维度
-                R_cv_final[i][j] += M_UE_to_CV[i][k] * temp_matrix[k][j];
-            }
-        }
-    }
-
-    float t_cv_final[3] = {
-        camera_target_pos[2] * pose_scale,  // Python中的t_cv[0] = t_ue[2]
-        camera_target_pos[1] * pose_scale,  // Python中的t_cv[1] = t_ue[1]
-        camera_target_pos[0] * pose_scale   // Python中的t_cv[2] = t_ue[0]
-    };
-
+    // 4. 更新计数器和哈希值 (这部分是通用的)
     g_camera_buffer_counter += 1.0;
     if (g_camera_buffer_counter > 9999.5) g_camera_buffer_counter = 1.0;
     g_camera_data_buffer[1] = g_camera_buffer_counter;
 
-    // 第一行：R_cv_final[0][0] (R11), R_cv_final[0][1] (R12), R_cv_final[0][2] (R13), t_cv_final[0] (Tx)
-    g_camera_data_buffer[2] = R_cv_final[0][0];
-    g_camera_data_buffer[3] = -R_cv_final[0][1];
-    g_camera_data_buffer[4] = -R_cv_final[0][2];
-    g_camera_data_buffer[5] = t_cv_final[0];
-
-    // 第二行：R_cv_final[1][0] (R21), R_cv_final[1][1] (R22), R_cv_final[1][2] (R23), t_cv_final[1] (Ty)
-    g_camera_data_buffer[6] = R_cv_final[1][0];
-    g_camera_data_buffer[7] = -R_cv_final[1][1];
-    g_camera_data_buffer[8] = -R_cv_final[1][2];
-    g_camera_data_buffer[9] = t_cv_final[1];
-
-    // 第三行：R_cv_final[2][0] (R31), R_cv_final[2][1] (R32), R_cv_final[2][2] (R33), t_cv_final[2] (Tz)
-    g_camera_data_buffer[10] = R_cv_final[2][0];
-    g_camera_data_buffer[11] = -R_cv_final[2][1];
-    g_camera_data_buffer[12] = -R_cv_final[2][2];
-    g_camera_data_buffer[13] = t_cv_final[2];
-
-    // FOV和哈希计算（保持C++原有逻辑不变）
-    g_camera_data_buffer[14] = fov;
     double poshash1 = 0.0;
     double poshash2 = 0.0;
     for (int i = 1; i <= 14; ++i)
@@ -539,7 +455,6 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 						reshade::log_message(reshade::log_level::info,
 						("Frame skipped1111: Δt=%lld us", std::to_string(delta_us_depth1).c_str()));
 					}	
-
 				if (shdata.save_texture_image_needing_resource_barrier_copy(basefilen + std::string("depth"),
 					ImageWriter_STB_png | ImageWriter_epr | ImageWriter_numpy | (shdata.game_knows_depthbuffer() ? ImageWriter_fpzip : 0),
 					cmdqueue, genericdepdata.selected_depth_stencil, TexInterp_Depth))
