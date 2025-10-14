@@ -130,6 +130,7 @@
     <ClCompile Include="..\gcv_games\ResidentEvils.cpp" />
     <ClCompile Include="..\gcv_games\RoR2.cpp" />
     <ClCompile Include="..\gcv_games\Sekiro.cpp" />
+    <ClCompile Include="..\gcv_games\Shipbreaker.cpp" />
     <ClCompile Include="..\gcv_games\Witcher3.cpp" />
     <ClCompile Include="..\gcv_utils\camera_data_struct.cpp" />
     <ClCompile Include="..\gcv_utils\depth_utils.cpp" />
@@ -195,6 +196,7 @@
     <ClInclude Include="..\gcv_games\RoR2.h" />
     <ClInclude Include="..\gcv_games\Sekiro.h" />
     <ClInclude Include="..\gcv_games\Stray.h" />
+    <ClInclude Include="..\gcv_games\Shipbreaker.h" />
     <ClInclude Include="..\gcv_games\Witcher3.h" />
     <ClInclude Include="..\gcv_utils\assert_utils.hpp" />
     <ClInclude Include="..\gcv_utils\camera_data_struct.h" />

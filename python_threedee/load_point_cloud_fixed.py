@@ -25,16 +25,6 @@ def make_K_from_fovy(fovy_deg, W, H, aspect_ratio=None):
     cx = (W - 1) / 2.0
     cy = (H - 1) / 2.0
     return fx, fy, cx, cy
-def make_K_from_fovx(fovx_deg, W, H, aspect_ratio=None):
-    if aspect_ratio is None:
-        aspect_ratio = W / H
-    fovx = d2r(fovx_deg)
-    fx = (W * 0.5) / math.tan(fovx * 0.5)
-    v = 2.0 * math.atan(math.tan(fovx * 0.5) / aspect_ratio)
-    fy = (H * 0.5) / math.tan(v * 0.5)
-    cx = (W - 1) / 2.0
-    cy = (H - 1) / 2.0
-    return fx, fy, cx, cy
 
 def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     """像素→相机系反投影（与正确脚本一致）"""
@@ -47,7 +37,7 @@ def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     x = (uu - cx) * z / fx
     y = (vv - cy) * z / fy
     
-    pts_cam = np.stack([x, -y, z], axis=-1).reshape(-1, 3)
+    pts_cam = np.stack([x, -y, -z], axis=-1).reshape(-1, 3)
     return pts_cam, uu.reshape(-1), vv.reshape(-1)
 
 # -------------------------- 从extrinsic_cam2world解析UE→OpenCV转换 --------------------------
@@ -153,6 +143,14 @@ def load_depth_and_meta(depthfile:str, and_rgb:bool):
         return depth, cam_data, rgb, depthbnam
     return depth, cam_data, None, depthbnam
 
+def linearize_depth(z_depth, z_near=0.3, z_far=1000.0, reversed=True):
+    """Convert ReShade raw depth [0,1] to linear metric depth."""
+    if reversed:
+        return (z_near * z_far) / (z_far - z_depth * (z_far - z_near))
+    else:
+        return (2.0 * z_near * z_far) / (z_far + z_near - (2.0 * z_depth - 1.0) * (z_far - z_near))
+
+
 # -------------------------- 生成点云（核心逻辑不变） --------------------------
 def load_cloud_via_meta(depthfile:str,
             colored:bool,
@@ -169,6 +167,8 @@ def load_cloud_via_meta(depthfile:str,
         rgb_image = np.copy(rgb)
     else:
         depth, cam_data, _, depthbnam = result
+    depth = np.flip(depth, axis=0)
+    # depth = linearize_depth(depth, reversed=True)
     depth_image = np.copy(depth)
     H, W = depth.shape[:2]
     aspect_ratio = W / H
@@ -223,7 +223,6 @@ def load_cloud_via_meta(depthfile:str,
     return ret
 
 # -------------------------- 合并与可视化 --------------------------
-
 def merge_clouds_world_points(clouds):
     if isinstance(clouds, dict):
         return clouds
@@ -253,6 +252,77 @@ def visualize_clouds(clouds):
     open3d.visualization.draw([o3dcloud])
 
 
+def add_camera_global_axis(merged_cloud, valid_clouds):
+    # hyperparameter
+    # N_global = 100 # number of points for global XYZ
+    max_global = 100
+    N_camera = 2000 # number of points for camera xyz
+    max_camera = 10
+
+    # visualize the global XYZ
+    # global_x = np.zeros((N_global, 3))
+    # global_x[:,0] = np.linspace(0, max_global, N_global)
+    # global_x_color = np.zeros(global_x.shape)
+    # global_x_color[:,0] = 1
+
+    # global_y = np.zeros((N_global, 3))
+    # global_y[:,1] = np.linspace(0, max_global, N_global)
+    # global_y_color = np.zeros(global_y.shape)
+    # global_y_color[:,1] = 1
+
+    # global_z = np.zeros((N_global, 3))
+    # global_z[:,2] = np.linspace(0, max_global, N_global)
+    # global_z_color = np.zeros(global_z.shape)
+    # global_z_color[:,2] = 1
+
+    c2ws = []
+    for valid_cloud in valid_clouds:
+        c2ws.append(valid_cloud['c2w'][:3, :4])
+    c2ws = np.array(c2ws)
+
+    # visualize the camera xyz
+    camera_centers = c2ws[:,:3,3]
+    camera_centers_color = np.zeros(camera_centers.shape)
+
+    camera_xs = np.linspace(0, max_camera, N_camera).reshape(N_camera, 1, 1)
+    camera_x_dirs = c2ws[:,:3,0]
+    camera_x_dirs = camera_x_dirs.reshape(1, *camera_x_dirs.shape)
+    camera_xs = camera_xs * camera_x_dirs + camera_centers[None]
+    camera_xs = camera_xs.reshape(-1, 3)
+    camera_xs_color = np.zeros(camera_xs.shape)
+    camera_xs_color[:,0] = 255
+
+    camera_ys = np.linspace(0, max_camera, N_camera).reshape(N_camera, 1, 1)
+    camera_y_dirs = c2ws[:,:3,1]
+    camera_y_dirs = camera_y_dirs.reshape(1, *camera_y_dirs.shape)
+    camera_ys = camera_ys * camera_y_dirs + camera_centers[None]
+    camera_ys = camera_ys.reshape(-1, 3)
+    camera_ys_color = np.zeros(camera_ys.shape)
+    camera_ys_color[:,1] = 255
+
+    camera_zs = np.linspace(0, max_camera, N_camera).reshape(N_camera, 1, 1)
+    camera_z_dirs = c2ws[:,:3,2]
+    camera_z_dirs = camera_z_dirs.reshape(1, *camera_z_dirs.shape)
+    camera_zs = camera_zs * camera_z_dirs + camera_centers[None]
+    camera_zs = camera_zs.reshape(-1, 3)
+    camera_zs_color = np.zeros(camera_zs.shape)
+    camera_zs_color[:,2] = 255
+
+    # plots
+    pts = np.concatenate([
+        camera_centers,
+        # global_x, global_y, global_z, 
+        camera_xs, camera_ys, 
+        camera_zs,
+    ], axis=0)
+    colors = np.concatenate([
+        camera_centers_color,
+        # global_x_color, global_y_color, global_z_color, 
+        camera_xs_color, camera_ys_color, 
+        camera_zs_color,
+    ], axis=0).astype(np.uint8)
+    merged_cloud['worldpoints'] = np.concatenate([merged_cloud['worldpoints'], pts])
+    merged_cloud['colors'] = np.concatenate([merged_cloud['colors'], colors])
 
 # -------------------------- 主函数 --------------------------
 if __name__ == '__main__':
@@ -278,6 +348,7 @@ if __name__ == '__main__':
                 pose_scale=args.pose_scale),
         args.depth_files
     )
+    # import pdb; pdb.set_trace()
 
     valid_clouds = [c for c in raw_clouds if c is not None]
     if len(valid_clouds) == 0:
@@ -287,8 +358,16 @@ if __name__ == '__main__':
     print(f"✅ 加载{len(valid_clouds)}帧有效点云，合并中...")
     merged_cloud = merge_clouds_world_points(valid_clouds)
     if args.save_to_file:
-        save_cloud_to_file(merged_cloud, args.save_to_file)
+        # save_cloud_to_file(merged_cloud, args.save_to_file)
         print(f"💾 点云已保存至: {args.save_to_file}")
-    visualize_clouds(merged_cloud)
+    
+    add_camera_global_axis(merged_cloud, valid_clouds)
+
 
     
+    
+    
+    
+    
+    
+    visualize_clouds(merged_cloud)

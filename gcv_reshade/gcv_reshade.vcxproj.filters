@@ -155,6 +155,12 @@
       <Filter>gcv_games</Filter>
     </ClCompile>
     <ClCompile Include="..\gcv_games\Sekiro.cpp">
+	    <Filter>gcv_games</Filter>
+	</ClCompile>
+    <ClCompile Include="..\gcv_games\Shipbreaker.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\Sekiro.cpp">
       <Filter>gcv_games</Filter>
     </ClCompile>
   </ItemGroup>
@@ -370,6 +376,9 @@
       <Filter>gcv_games</Filter>
     </ClInclude>
     <ClInclude Include="..\gcv_games\Borderlands3.h">
+	    <Filter>gcv_games</Filter>
+	</ClInclude>
+    <ClInclude Include="..\gcv_games\Shipbreaker.h">
       <Filter>gcv_games</Filter>
     </ClInclude>
     <ClInclude Include="..\gcv_games\HogwartsLegacy.h">
