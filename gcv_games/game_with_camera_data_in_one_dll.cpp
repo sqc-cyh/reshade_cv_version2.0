@@ -27,6 +27,7 @@ scriptedcam_checkbuf_funptr GameWithCameraDataInOneDLL::get_scriptedcambuf_check
 
 uint64_t GameWithCameraDataInOneDLL::get_scriptedcambuf_triggerbytes() const
 {
+    // 默认是原来的魔数
     return 4429373075689993337ull;
 }
 

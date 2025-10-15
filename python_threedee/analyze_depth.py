@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 np.set_printoptions(threshold=np.inf)
 
 # 你的 .npy 文件路径
-file_path = r"C:\Users\10762\Desktop\test\10.11测标-f9\10.11测标-f9\actions_2025-10-11_472979792\frame_000001_depth.npy"
+file_path = r"C:\Users\10762\Desktop\code\reshade_cv_v2\python_test\Stray\trans\Stray_2025-10-15_3343238778_depth.npy"
 try:
     # 加载 .npy 文件
     data = np.load(file_path)

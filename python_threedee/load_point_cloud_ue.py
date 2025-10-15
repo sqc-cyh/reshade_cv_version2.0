@@ -5,7 +5,7 @@ import json
 import math
 import numpy as np
 from PIL import Image
-# from save_point_cloud_to_file import save_cloud_to_file
+from save_point_cloud_to_file import save_cloud_to_file
 from misc_utils import files_glob
 from functools import partial
 from tqdm.contrib.concurrent import process_map
@@ -179,6 +179,7 @@ def load_cloud_via_meta(depthfile:str,
     print("cam2world:\n", cam2world)
     # 2. 转换为OpenCV系c2w矩阵（与正确脚本对齐）
     c2w, R_cv, t_cv = cam2world_to_cv_unchanged(cam2world, pose_scale)
+    # t_cv *= 10
     print(f"[DEBUG] 帧 {depthbnam} 的c2w矩阵:\n{c2w}")
 
     # 3. 计算内参（用垂直FOV，与正确脚本逻辑一致）
@@ -357,10 +358,10 @@ if __name__ == '__main__':
     print(f"✅ 加载{len(valid_clouds)}帧有效点云，合并中...")
     merged_cloud = merge_clouds_world_points(valid_clouds)
     if args.save_to_file:
-        # save_cloud_to_file(merged_cloud, args.save_to_file)
+        save_cloud_to_file(merged_cloud, args.save_to_file)
         print(f"💾 点云已保存至: {args.save_to_file}")
     
-    add_camera_global_axis(merged_cloud, valid_clouds)
+    # add_camera_global_axis(merged_cloud, valid_clouds)
     
     
     visualize_clouds(merged_cloud)

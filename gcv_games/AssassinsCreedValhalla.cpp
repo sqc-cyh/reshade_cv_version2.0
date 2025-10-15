@@ -57,7 +57,6 @@ void GameAssassinsCreedValhalla::process_camera_buffer_from_igcs(
     float fov)
 {
     
-    // --- 将 main.cpp 中的原始逻辑移动到这里作为默认实现 ---
     const float cr = cos(roll), sr = sin(roll);
     const float cp = cos(pitch), sp = sin(pitch);
     const float cy = cos(yaw), sy = sin(yaw);
@@ -106,7 +105,7 @@ void GameAssassinsCreedValhalla::process_camera_buffer_from_igcs(
     camera_data_buffer[11] = -R_cv_final[2][1]; 
     camera_data_buffer[12] = -R_cv_final[2][2]; 
     camera_data_buffer[13] = t_cv_final[2];
-    
+
     camera_data_buffer[14] = fov;
     
 }

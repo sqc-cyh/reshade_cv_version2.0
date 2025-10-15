@@ -182,7 +182,7 @@ def load_cloud_via_meta(depthfile:str,
     print(f"[DEBUG] 帧 {depthbnam} 的c2w矩阵:\n{c2w}")
 
     # 3. 计算内参（用垂直FOV，与正确脚本逻辑一致）
-    fx, fy, cx, cy = make_K_from_fovx(fov_v_deg, W, H, aspect_ratio)
+    fx, fy, cx, cy = make_K_from_fovy(fov_v_deg, W, H, aspect_ratio)
     print(f"[DEBUG] 内参: fx={fx:.2f}, fy={fy:.2f}, cx={cx:.2f}, cy={cy:.2f}")
 
     # 4. 点云反投影
