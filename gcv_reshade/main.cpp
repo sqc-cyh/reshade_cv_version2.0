@@ -384,7 +384,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime *runtime,
 		}
     }
 
-    if (segmentation_app_update_on_finish_effects(runtime, runtime->is_key_pressed(VK_F12)))
+    if (segmentation_app_update_on_finish_effects(runtime, runtime->is_key_pressed(VK_F11)))
 	{
 		generic_depth_data &genericdepdata = runtime->get_private_data<generic_depth_data>();
 		reshade::api::command_queue *cmdqueue = runtime->get_command_queue();

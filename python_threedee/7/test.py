@@ -60,9 +60,9 @@ def ue_rotator_to_R_world(roll_deg, pitch_deg, yaw_deg):
     Converts Unreal Engine Rotator (roll, pitch, yaw) to a 3x3 left-handed rotation matrix.
     The order of operations is Yaw (Z), then Pitch (Y), then Roll (X).
     """
-    rx = rot_x_lh(d2r(roll_deg))
-    ry = rot_y_lh(d2r(pitch_deg))
-    rz = rot_z_lh(d2r(yaw_deg))
+    rx = rot_x_lh((roll_deg))
+    ry = rot_y_lh((pitch_deg))
+    rz = rot_z_lh((yaw_deg))
     # The multiplication order is R_z * R_y * R_x
     # This corresponds to an extrinsic ZYX rotation, which matches UE's convention.
     return rz @ ry @ rx
@@ -101,9 +101,9 @@ M_UE_to_CV = np.array([[0, 1,  0],
                        [1, 0,  0]], dtype=np.float64)
 
 def build_cv_c2w_from_ue(location, rotation):
-    R_ue = ue_rotator_to_R_world(rotation['roll'], rotation['pitch'], rotation['yaw'])
+    R_ue = ue_rotator_to_R_world(rotation['roll'], -rotation['pitch'], -rotation['yaw'])
     R_cv = M_UE_to_CV @ R_ue @ M_UE_to_CV.T
-    t_cv = np.array([location['x'], location['z'], location['y']], dtype=np.float64) 
+    t_cv = np.array([location['x'], -location['z'], -location['y']], dtype=np.float64) 
     return R_cv, t_cv
 
 def to_hom(X):  # (N,3)->(N,4)
@@ -272,7 +272,7 @@ def main():
         location = pose["location"]
         rotation = pose["rotation"]
 
-        pose_scale = 3.0    # 建议先用 2.8–3.0，后续做全局标定
+        pose_scale = 1.3333   # 建议先用 2.8–3.0，后续做全局标定
         location = {k: v * pose_scale for k, v in pose["location"].items()}
 
         fx, fy, cx, cy = make_K_from_fovy(fovx_deg, W, H, aspect_ratio)
