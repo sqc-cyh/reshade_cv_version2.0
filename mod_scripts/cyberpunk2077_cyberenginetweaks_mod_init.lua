@@ -19,6 +19,14 @@ local function zero_the_cambuf()
     MyCamCoordsStash.contiguousmembuf[17] = MyCamCoordsStash.contiguousmembuf[2];
 end
 
+local function transformMatrix(mat)
+    return {
+        X = {x = mat.X.x, y = mat.X.y, z = mat.X.z},  -- X轴不变
+        Y = {x = mat.Z.x, y = mat.Z.y, z = mat.Z.z},  -- Y = 原Z
+        Z = {x = -mat.Y.x, y = -mat.Y.y, z = -mat.Y.z} -- Z = -原Y
+    }
+end
+
 registerForEvent("onUpdate", function(delta)
     if Game == nil then
         zero_the_cambuf();
@@ -39,7 +47,8 @@ registerForEvent("onUpdate", function(delta)
         else
             if camsystem:GetActiveCameraWorldTransform(MyCamCoordsStash.CamTransform) then
                 local camfov = Game.GetCameraSystem():GetActiveCameraFOV();
-                local tmat = Transform.ToMatrix(MyCamCoordsStash.CamTransform);
+                local mat = Transform.ToMatrix(MyCamCoordsStash.CamTransform);
+                local tmat = transformMatrix(mat);
                 local poshash1 = (MyCamCoordsStash.counter + tmat.X.x + tmat.Y.x + tmat.Z.x + MyCamCoordsStash.CamTransform.position.x + tmat.X.y + tmat.Y.y + tmat.Z.y + MyCamCoordsStash.CamTransform.position.y + tmat.X.z + tmat.Y.z + tmat.Z.z + MyCamCoordsStash.CamTransform.position.z + camfov);
                 local poshash2 = (MyCamCoordsStash.counter - tmat.X.x + tmat.Y.x - tmat.Z.x + MyCamCoordsStash.CamTransform.position.x - tmat.X.y + tmat.Y.y - tmat.Z.y + MyCamCoordsStash.CamTransform.position.y - tmat.X.z + tmat.Y.z - tmat.Z.z + MyCamCoordsStash.CamTransform.position.z - camfov);
                 MyCamCoordsStash.contiguousmembuf[ 2] = MyCamCoordsStash.counter;

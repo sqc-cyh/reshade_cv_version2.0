@@ -26,9 +26,9 @@ public class CamInfoBufferSigned : Script
     private static void ColumnMajorCam2World(Matrix R, Vector3 C, double[] dst, int off)
     {
         // 转置行主序矩阵 R 为列主序
-        dst[off + 0] = R.M11; dst[off + 1] = R.M21; dst[off + 2] = R.M31; dst[off + 3] = C.X;
-        dst[off + 4] = R.M12; dst[off + 5] = R.M22; dst[off + 6] = R.M32; dst[off + 7] = C.Y;
-        dst[off + 8] = R.M13; dst[off + 9] = R.M23; dst[off +10] = R.M33; dst[off +11] = C.Z;
+        dst[off + 0] = R.M11; dst[off + 1] = R.M31; dst[off + 2] = -R.M21; dst[off + 3] = C.X;
+        dst[off + 4] = R.M12; dst[off + 5] = R.M32; dst[off + 6] = -R.M22; dst[off + 7] = C.Y;
+        dst[off + 8] = R.M13; dst[off + 9] = R.M33; dst[off +10] = -R.M23; dst[off +11] = C.Z;
     }
 
 
