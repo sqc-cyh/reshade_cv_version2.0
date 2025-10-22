@@ -45,17 +45,19 @@
     <TargetExt>.addon</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgUseStatic>true</VcpkgUseStatic>
     <VcpkgConfiguration>Release</VcpkgConfiguration>
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -66,14 +68,14 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\reshade-5.8.0\deps\imgui;C:\Users\10762\Desktop\code\reshade-5.8.0\include;C:\Users\10762\Desktop\code\reshade_cv_v2;C:\Users\10762\Desktop\code\reshade_cv_v2\gcv_utils;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)build\x64\$(Configuration)\;$(SolutionDir)..\vcpkg\installed\x64-windows\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;xxhash.lib;hdf5.lib;hdf5_cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -86,7 +88,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\reshade-5.8.0\deps\imgui;C:\Users\10762\Desktop\code\reshade-5.8.0\include;C:\Users\10762\Desktop\code\reshade_cv_v2;C:\Users\10762\Desktop\code\reshade_cv_v2\gcv_utils;C:\Users\10762\Desktop\code\vcpkg\installed\x64-windows\include\eigen3;C:\Users\10762\Desktop\code\vcpkg\installed\x64-windows\include;C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -95,7 +97,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;xxhash.lib;hdf5.lib;hdf5_cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)build\x64\$(Configuration)\;C:\Users\10762\Desktop\code\vcpkg\installed\x64-windows\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)build\x64\$(Configuration)\;$(SolutionDir)..\vcpkg\installed\x64-windows\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />
   </ItemDefinitionGroup>
@@ -112,6 +114,7 @@
     <ClCompile Include="..\gcv_games\Crysis.cpp" />
     <ClCompile Include="..\gcv_games\Cyberpunk2077.cpp" />
     <ClCompile Include="..\gcv_games\DishonoredDOTO.cpp" />
+    <ClCompile Include="..\gcv_games\EuroTruckSimulator2.cpp" />
     <ClCompile Include="..\gcv_games\game_interface.cpp" />
     <ClCompile Include="..\gcv_games\game_interface_factory.cpp" />
     <ClCompile Include="..\gcv_games\game_with_camera_data_in_one_dll.cpp" />
@@ -164,6 +167,7 @@
     <ClInclude Include="..\gcv_games\Crysis.h" />
     <ClInclude Include="..\gcv_games\Cyberpunk2077.h" />
     <ClInclude Include="..\gcv_games\DishonoredDOTO.h" />
+    <ClInclude Include="..\gcv_games\EuroTruckSimulator2.h" />
     <ClInclude Include="..\gcv_games\game_interface_factory.h" />
     <ClInclude Include="..\gcv_games\game_interface.h" />
     <ClInclude Include="..\gcv_games\game_interface_factory_registration.h" />

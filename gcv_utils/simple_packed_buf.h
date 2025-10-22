@@ -17,7 +17,7 @@ struct simple_packed_buf {
 	BufPixelFormat pixfmt = BUF_PIX_FMT_NONE;
 	size_t width = 0;
 	size_t height = 0;
-	std::vector<uint8_t> bytes;
+	std::vector<uint8_t> bytes; 
 
 	size_t rowstride_bytes() const; // number of bytes from one row to the next
 	size_t bytes_per_pixel() const;

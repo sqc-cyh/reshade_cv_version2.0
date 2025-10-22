@@ -72,12 +72,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(ProjectDir)</IncludePath>
     <IntDir>$(SolutionDir)build\intermediate_renderdoc\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(ProjectDir)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</IncludePath>
     <IntDir>$(SolutionDir)build\intermediate_renderdoc\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -118,7 +118,7 @@
       <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\reshade-5.8.0\deps\imgui;C:\Users\10762\Desktop\code\reshade-5.8.0\include;C:\Users\10762\Desktop\code\reshade_cv_v2;C:\Users\10762\Desktop\code\reshade_cv_v2\gcv_utils;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include;F:\Visual_Studio\Repos\vcpkg\installed\x64-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -135,7 +135,7 @@
       <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\reshade-5.8.0\deps\imgui;C:\Users\10762\Desktop\codes\reshade-5.8.0\include;C:\Users\10762\Desktop\code\reshade_cv_v2;C:\Users\10762\Desktop\code\reshade_cv_v2\gcv_utils;C:\Users\10762\Desktop\code\vcpkg\installed\x64-windows\include\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>

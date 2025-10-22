@@ -76,12 +76,12 @@ def unpack_data_to_frames(data_dir, output_dir=None):
         img.save(png_filename, format='PNG')
 
     cap.release()
-    print(f"✅ 成功提取 {total_frames} 帧 RGB 图像.")
+    print(f"✅ 成功提取 {total_video_frames} 帧 RGB 图像.")
 
     # === Step 3: 检查 camera.json 是否齐全（可选）===
     missing_cams = []
     print("📄 验证 camera.json 文件...")
-    for i in range(total_frames):
+    for i in range(total_video_frames):
         cam_file = os.path.join(cam_dir, f"frame_{i:06d}_camera.json")
         if not os.path.isfile(cam_file):
             missing_cams.append(i)
@@ -92,7 +92,7 @@ def unpack_data_to_frames(data_dir, output_dir=None):
         print("✅ 所有 camera.json 存在.")
 
     print(f"🎉 解包完成！输出目录: {output_dir}")
-    print(f"📊 总帧数: {total_frames}")
+    print(f"📊 总帧数: {total_video_frames}")
     print("📁 输出文件示例:")
     print(f"   {os.path.join(output_dir, 'frame_000000_depth.npy')}")
     print(f"   {os.path.join(output_dir, 'frame_000000_RGB.png')}")

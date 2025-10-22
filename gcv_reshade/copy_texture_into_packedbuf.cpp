@@ -4,7 +4,7 @@
  *     SPDX-License-Identifier: BSD-3-Clause OR MIT
  * Other portions Copyright (C) 2022 Jason Bunk
  */
-#include <reshade.hpp>
+#include <reshade.hpp> 
 #include "copy_texture_into_packedbuf.h"
 #include "tex_buffer_utils.h"
 #include "xxhash.h"

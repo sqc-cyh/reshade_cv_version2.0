@@ -4,7 +4,7 @@
  * Copyright (C) 2021 Patrick Mours
  * SPDX-License-Identifier: BSD-3-Clause OR MIT
  */
-#include <stdint.h>
+#include <stdint.h> 
 #include <reshade.hpp>
 #include <string>
 #include "gcv_utils/simple_packed_buf.h"

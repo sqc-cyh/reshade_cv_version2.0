@@ -1,4 +1,4 @@
-#include "depth_utils.h"
+#include "depth_utils.h" 
 
 // source: Nicol Schraudolph, Edward Kmett
 // Academic paper: "A Fast, Compact Approximation of the Exponential Function", Nicol N. Schraudolph, 1999

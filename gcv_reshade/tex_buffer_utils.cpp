@@ -2,7 +2,7 @@
  * Source: reshade addon examples: texture_dump/save_texture.cpp
  * Copyright (C) 2021 Patrick Mours
  * SPDX-License-Identifier: BSD-3-Clause OR MIT
- */
+ */ 
 #include "tex_buffer_utils.h"
 
 void unpack_r5g6b5(uint16_t data, uint8_t rgb[3])

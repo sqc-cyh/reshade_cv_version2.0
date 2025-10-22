@@ -2,7 +2,7 @@
 #include "copy_texture_into_packedbuf.h"
 #include <cmath>
 #include <cstring>
-
+ 
 bool grab_bgra_frame(reshade::api::command_queue* q, reshade::api::resource tex,
                      std::vector<uint8_t>& out_bgra, int& w, int& h) {
   simple_packed_buf pbuf;

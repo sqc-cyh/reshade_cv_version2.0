@@ -1,5 +1,5 @@
 // Copyright (C) 2022 Jason Bunk
-#include "scan_for_camera_matrix.h"
+#include "scan_for_camera_matrix.h" 
 #include <reshade.hpp>
 
 void AllMemScanner::reset_iterator_to_beginning() {

@@ -1,7 +1,7 @@
 // Copyright (C) 2022 Jason Bunk
 #include "gcv_utils/simple_packed_buf.h"
 
-size_t simple_packed_buf::bytes_per_pixel() const {
+size_t simple_packed_buf::bytes_per_pixel() const { 
 	switch (pixfmt) {
 	case BUF_PIX_FMT_RGB24: return 3;
 	case BUF_PIX_FMT_RGBA: return 4;

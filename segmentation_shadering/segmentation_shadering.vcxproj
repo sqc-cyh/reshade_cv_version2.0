@@ -73,12 +73,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)</IncludePath>
     <IntDir>$(SolutionDir)build\intermediate_segmshader\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</IncludePath>
     <IntDir>$(SolutionDir)build\intermediate_segmshader\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -109,21 +109,21 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ItemDefinitionGroup Condition="'$(Confi guration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Projects\GameHacking\DirectXShaderCompiler\out\build\x64-Release\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\lib;C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Projects\GameHacking\DirectXShaderCompiler\out\build\x64-Release\lib;C:\Projects\GameHacking\DirectXShaderCompiler\out\build\x64-Release\bin</AdditionalLibraryDirectories>
       <AdditionalDependencies>dxilconv.lib</AdditionalDependencies>
     </Lib>
     <ProjectReference />
@@ -137,7 +137,7 @@
       <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,10 +146,20 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\lib;C:\Users\10762\Desktop\code\DirectXShaderCompiler\out\build\x64-Release\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Projects\GameHacking\DirectXShaderCompiler\out\build\x64-Release\lib;C:\Projects\GameHacking\DirectXShaderCompiler\out\build\x64-Release\bin</AdditionalLibraryDirectories>
       <AdditionalDependencies>dxilconv.lib</AdditionalDependencies>
     </Lib>
     <ProjectReference />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>RENDERDOC_FOR_SHADERS;RENDERDOC_EXPORTS;RENDERDOC_PLATFORM_WIN32;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="customize_dxbc.hpp" />

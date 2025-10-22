@@ -1,6 +1,6 @@
 #include "game_interface_factory.h"
 /*
- * Modified from original source: https://github.com/Derydoca/factory-auto-registration
+ * Modified from original source: https://github.com/Derydoca/factory-auto-registration 
  * Copyright (C) 2019 Derrick Canfield
  * SPDX-License-Identifier: BSD-3-Clause
  */

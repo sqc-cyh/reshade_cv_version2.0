@@ -69,7 +69,7 @@ static void draw_text_bgra(uint8_t* img,int W,int H,int x,int y,const char* s,in
                            uint8_t r,uint8_t g,uint8_t b,uint8_t a=255){
     int cx=x; for(const char* p=s; *p; ++p){ draw_char_bgra(img,W,H,cx,y,*p,scale,r,g,b,a); cx += (5*scale + scale); }
 }
-
+ 
 // ---- Gray pixel/rectangle/text ----
 static inline void blend_px_gray(uint8_t* img,int W,int H,int x,int y,uint8_t v,uint8_t a){
     if(x<0||y<0||x>=W||y>=H) return;

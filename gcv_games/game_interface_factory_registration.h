@@ -1,4 +1,4 @@
-#pragma once
+#pragma once 
 /*
  * Modified from original source: https://github.com/Derydoca/factory-auto-registration
  * Copyright (C) 2019 Derrick Canfield

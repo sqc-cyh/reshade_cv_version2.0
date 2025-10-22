@@ -1,6 +1,6 @@
 #pragma once
 // Copyright (C) 2022 Jason Bunk
-#include <Eigen/Dense>
+#include <Eigen/Dense> 
 
 typedef double ftype;
 typedef Eigen::Matrix<ftype,3,4> CamMatrix;

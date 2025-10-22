@@ -1,4 +1,4 @@
-#pragma once
+#pragma once 
 // Copyright (C) 2022 Jason Bunk
 #include <Windows.h>
 #include <string>

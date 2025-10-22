@@ -1,5 +1,5 @@
 // Copyright (C) 2022 Jason Bunk
-#include "geometry.h"
+#include "geometry.h" 
 
 std::array<ftype, 12> cam_matrix_to_flattened_row_major_array(CamMatrix mat) {
 	return eigen_matrix_to_flattened_row_major_array<3, 4>(mat);

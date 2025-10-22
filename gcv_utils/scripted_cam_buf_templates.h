@@ -1,4 +1,4 @@
-#pragma once
+#pragma once 
 // Copyright (C) 2022 Jason Bunk
 #include <cmath>
 #include <sstream>

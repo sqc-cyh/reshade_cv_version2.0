@@ -1,6 +1,6 @@
 #pragma once
 // Copyright (C) 2022 Jason Bunk
-#include <reshade.hpp>
+#include <reshade.hpp> 
 #include <thread>
 #include <vector>
 #include <chrono>
