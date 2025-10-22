@@ -65,7 +65,12 @@ bool Recorder::start(){
     csv_ = _fsopen(csv_path.c_str(), "w", _SH_DENYNO);
     if (csv_) {
       setvbuf(csv_, nullptr, _IONBF, 0);
-      std::fprintf(csv_, "frame_idx,time_us,w,a,s,d,shift,space\n");
+      // std::fprintf(csv_, "frame_idx,time_us,w,a,s,d,shift,space\n");
+      std::fprintf(csv_, "frame_idx,time_us,");
+      for (char c = 'A'; c <= 'Z'; ++c) {
+        std::fprintf(csv_, "%c,", c);
+      }
+      std::fprintf(csv_, "shift,ctrl,alt,space,enter,escape,tab\n");
     } else {
       // error log
       int e = errno;

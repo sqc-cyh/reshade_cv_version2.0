@@ -27,6 +27,7 @@ protected:
   virtual void camera_matrix_postprocess_rotate(CamMatrixData& rcam) const {};
 
   virtual scriptedcam_checkbuf_funptr get_scriptedcambuf_checkfun() const;
+  virtual uint64_t get_scriptedcambuf_triggerbytes() const;
   virtual uint64_t get_scriptedcambuf_sizebytes() const { return 0; }
   virtual bool copy_scriptedcambuf_to_matrix(uint8_t* buf, uint64_t buflen, CamMatrixData& rcam, std::string& errstr) const { return false; }
 

@@ -6,3 +6,4 @@ build
 *.7z
 *.ply
 *.pcd
+python_test

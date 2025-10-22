@@ -5,7 +5,7 @@
 #include "gcv_utils/camera_data_struct.h"
 #include <Windows.h>
 #include <string>
-
+namespace reshade { namespace api { struct effect_runtime; } }
 class GameInterface {
 protected:
 	HANDLE mygame_handle_exe = 0;
@@ -31,4 +31,13 @@ public:
 
 	// memory scans
 	virtual bool scan_all_memory_for_scripted_cam_matrix(std::string& errstr) { errstr += "not implemented"; return false; }
+	virtual bool update_camera_buffer_from_reshade(reshade::api::effect_runtime* /*runtime*/, double* /*out*/, size_t /*out_len*/, double& /*counter*/) const{return false;}
+	// 新增的虚函数，用于处理来自IGCS的相机数据
+    virtual void process_camera_buffer_from_igcs(double* camera_data_buffer, const float* camera_ue_pos, float roll, float pitch, float yaw, float fov){
+        // 默认实现：不进行任何处理，仅清空相机位姿数据。
+		for (int i = 2; i <= 14; ++i){
+			camera_data_buffer[i] = 0.0;
+		}
+    }
+
 };

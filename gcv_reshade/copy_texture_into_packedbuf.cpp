@@ -22,6 +22,30 @@ T ceil_int(T x, T y) {
 void depth_gray_bytesLE_to_f32(simple_packed_buf &dstBuf, const resource_desc &desc, const subresource_data &data,
 							size_t hint_srcbytes, size_t hint_srcbyteskeep, int hint_pitchadjusthack,
 							GameInterface* gamehandle, const depth_tex_settings &settings) {
+
+	//// ??????????????
+	//uint8_t* debug_ptr = static_cast<uint8_t*>(data.data);
+	//size_t non_zero_pixels = 0;
+	//size_t total_pixels = desc.texture.width * desc.texture.height;
+
+	//for (size_t y = 0; y < desc.texture.height; y++) {
+	//	for (size_t x = 0; x < desc.texture.width; x++) {
+	//		size_t offset = y * data.row_pitch + x * 8;
+	//		bool pixel_has_data = false;
+	//		for (size_t z = 0; z < 4; z++) { // ????4???????
+	//			if (debug_ptr[offset + z] != 0) {
+	//				pixel_has_data = true;
+	//				break;
+	//			}
+	//		}
+	//		if (pixel_has_data) non_zero_pixels++;
+	//	}
+	//}
+	//reshade::log_message(reshade::log_level::error,
+	//	std::string("Non-zero pixels: " + std::to_string(non_zero_pixels) +
+	//		" / " + std::to_string(total_pixels)).c_str());
+
+
 	if (dstBuf.pixfmt != BUF_PIX_FMT_GRAYF32) {
 		reshade::log_message(reshade::log_level::error, std::string(std::string("depth_gray_bytesLE_to_f32: dstBuf.pixfmt ") + std::to_string(static_cast<int64_t>(dstBuf.pixfmt))).c_str());
 		return;
@@ -122,7 +146,7 @@ void depth_gray_bytesLE_to_f32(simple_packed_buf &dstBuf, const resource_desc &d
 
 bool copy_texture_image_given_ready_resource_into_packedbuf(
 	GameInterface *gamehandle, simple_packed_buf &dstBuf,
-	const resource_desc &desc, const subresource_data &data,\
+	const resource_desc &desc, const subresource_data &data,
 	TextureInterpretation tex_interp, const depth_tex_settings& depth_settings)
 {
 	dstBuf.width = desc.texture.width;

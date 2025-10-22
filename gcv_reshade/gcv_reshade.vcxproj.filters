@@ -106,6 +106,30 @@
     <ClCompile Include="..\gcv_games\DishonoredDOTO.cpp">
       <Filter>gcv_games</Filter>
     </ClCompile>
+    <ClCompile Include="..\gcv_games\AssassinsCreedOdyssey.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\AssassinsCreedOrigin.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\AssassinsCreedShadows.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\AssassinsCreedValhalla.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\Borderlands3.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\Stray.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\HogwartsLegacy.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\BlackMythWukong.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
     <ClCompile Include="ffmpeg_pipe_win.cpp">
       <Filter>gcv_reshade</Filter>
     </ClCompile>
@@ -122,6 +146,22 @@
       <Filter>gcv_games</Filter>
     </ClCompile>
     <ClCompile Include="..\gcv_games\EuroTruckSimulator2.cpp">
+    <ClCompile Include="..\gcv_games\RDR2.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\RoR2.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\DarkSoulsIII.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\Sekiro.cpp">
+	    <Filter>gcv_games</Filter>
+	</ClCompile>
+    <ClCompile Include="..\gcv_games\Shipbreaker.cpp">
+      <Filter>gcv_games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gcv_games\Sekiro.cpp">
       <Filter>gcv_games</Filter>
     </ClCompile>
   </ItemGroup>
@@ -316,6 +356,43 @@
       <Filter>gcv_games</Filter>
     </ClInclude>
     <ClInclude Include="..\gcv_games\EuroTruckSimulator2.h">
+    <ClInclude Include="..\gcv_games\RDR2.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\RoR2.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\AssassinsCreedOdyssey.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\AssassinsCreedOrigin.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\AssassinsCreedShadows.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\AssassinsCreedValhalla.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\DarkSoulsIII.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\Borderlands3.h">
+	    <Filter>gcv_games</Filter>
+	</ClInclude>
+    <ClInclude Include="..\gcv_games\Shipbreaker.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\HogwartsLegacy.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\Sekiro.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\BlackMythWukong.h">
+      <Filter>gcv_games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gcv_games\Stray.h">
       <Filter>gcv_games</Filter>
     </ClInclude>
   </ItemGroup>

@@ -26,19 +26,41 @@ def fovv_and_fovh_degrees_given_either(fovv:float, fovh:float, screen_aspect_rat
         return vertical_fov_from_horizontal_fov_degrees(fovh, screen_aspect_ratio), fovh
 
 
-def build_intrinsicmatrix_camtoscreenpix_pinhole_camera(fov_vertical_degrees:float, screen_width:int, screen_height:int):
-    fov_horizontal_degrees = horizontal_fov_from_vertical_fov_degrees(fov_vertical_degrees, float(screen_width)/float(screen_height))
+def build_intrinsicmatrix_camtoscreenpix_pinhole_camera(
+    fov_vertical_degrees: float,
+    screen_width: int,
+    screen_height: int,
+    camera_basis: str = "opengl",   # 新增：相机坐标系约定，默认支持 OpenGL
+):
+    fov_horizontal_degrees = horizontal_fov_from_vertical_fov_degrees(
+        fov_vertical_degrees, float(screen_width)/float(screen_height)
+    )
     fx = focallengthperpixel_fromfovdegrees(fov_horizontal_degrees)
     fy = focallengthperpixel_fromfovdegrees(fov_vertical_degrees)
-    print("fx:",fx,"fy:",fy)
+    print("fx:", fx, "fy:", fy)
+
     screenwhf = math.sqrt(float(screen_width * screen_height))
     cam2screen = np.zeros((4,4), dtype=np.float64)
     cam2screen[3,3] = 1.
+    # 这里的构造隐含 D=Y_c、u 由 X_c/Y_c、v 由 -Z_c/Y_c 给出
     cam2screen[2,1] = 1.
     cam2screen[0,0] = screenwhf*math.sqrt(fx*fy)
     cam2screen[1,2] = -screenwhf*math.sqrt(fx*fy)
     cam2screen[0,1] = 0.5*float(screen_width)
     cam2screen[1,1] = 0.5*float(screen_height)
+
+    # # —— 新增 begin —— 
+    # # 若 JSON 的 cam 坐标是 OpenGL(X right, Y up, -Z forward)，
+    # # 则有 x_opengl = C · x_expected，其中 C = [[1,0,0],[0,0,1],[0,-1,0]].
+    # # 为了等价于主函数里 cam2world @ C，这里右乘 C^{-1}=C^T 预补偿：
+    # if camera_basis.lower() in ("opengl", "gl"):
+    #     C = np.eye(4, dtype=np.float64)
+    #     C[:3,:3] = np.array([[1, 0, 0],
+    #                          [0, 0, 1],
+    #                          [0,-1, 0]], dtype=np.float64)
+    #     cam2screen = cam2screen @ C.T   # 右乘 C^{-1}
+    # —— 新增 end ——
+
     return cam2screen
 
 

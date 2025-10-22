@@ -3,7 +3,7 @@
 
 #include <filesystem>
 
-#include "gcv_games/game_interface_factory.h"  
+#include "gcv_games/game_interface_factory.h"
 #include "gcv_utils/miscutils.h"
 #include "segmentation/segmentation_app_data.hpp"
 using moodycamel::ConcurrentQueue;
@@ -136,6 +136,7 @@ bool image_writer_thread_pool::save_texture_image_needing_resource_barrier_copy(
         reshade::log_message(reshade::log_level::error, std::string(std::string("texture null: failed to save ") + base_filename).c_str());
         return false;
     }
+
     if (num_threads() == 0) change_num_threads(3);
     if (num_threads() == 0) return false;
     init_in_game();
