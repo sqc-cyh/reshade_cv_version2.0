@@ -2,7 +2,7 @@
 
 #include "game_with_camera_data_in_one_dll.h"
 
-class GameShipbreaker : public GameWithCameraDataInOneDLL {
+class GameRoR2 : public GameWithCameraDataInOneDLL {
 public:
     virtual std::string gamename_simpler() const override { return "Shipbreaker"; }
     virtual std::string gamename_verbose() const override;
@@ -19,4 +19,4 @@ public:
     virtual float convert_to_physical_distance_depth_u64(uint64_t depthval) const override;
 };
 
-REGISTER_GAME_INTERFACE(GameShipbreaker, 0, "shipbreaker.exe");
+REGISTER_GAME_INTERFACE(GameRoR2, 0, "Shipbreaker.exe");

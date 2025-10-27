@@ -1,0 +1,25 @@
+SiiNunit
+{
+	# ".package_name" does not matter as the dot at the beginning of the file means that this unit is anonymous. 
+	# Please keep this form to not make any conflicts with other mod packages (name collisions).
+	mod_package : .package_name {
+
+	# Package version can be any string with any length.
+	package_version: "1.0"
+
+	# Author can be any string with any length.
+	author: "lucasQAQ"
+
+	# Categories is an array of strings (max 2 category).
+	category[]: "ui"
+
+	# Icon inside the root directory of the mod.
+	icon: "mod_thumbnail.jpg"
+
+	# Description file inside the root directory of the mod.
+	description_file: "mod_description.txt"
+	
+	# Not required to other players in convoy have this mod too.
+	mp_mod_optional: true
+}
+}

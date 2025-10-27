@@ -41,13 +41,12 @@ bool GameEuroTruckSimulator2::can_interpret_depth_buffer() const {
 }
 
 float GameEuroTruckSimulator2::convert_to_physical_distance_depth_u64(uint64_t depthval) const {
-    const double normalized_depth = static_cast<double>(depthval) / 16777215.0;
-    const float z_near = 0.15f;
-    const float z_far = 10003.814f;
+    float normalized_depth = static_cast<float>(depthval) / 16777215.0;
+    const float z_near = 1.0f;
+    const float z_far = 1000.0f;
     const float linear_depth = z_near * z_far / (z_far - normalized_depth * (z_far - z_near));
     return linear_depth;
 }
-
 // Shared memory access for camera data
 class SharedMemoryCameraReader {
    private:

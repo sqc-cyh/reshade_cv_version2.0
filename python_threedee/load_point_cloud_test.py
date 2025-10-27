@@ -20,8 +20,11 @@ def make_K_from_fovy(fovy_deg, W, H, aspect_ratio=None):
         aspect_ratio = W / H
     fovy = d2r(fovy_deg)
     fy = (H * 0.5) / math.tan(fovy * 0.5)
-    fovx = 2.0 * math.atan(aspect_ratio * math.tan(fovy * 0.5))  # 转换为水平FOV
-    fx = (W * 0.5) / math.tan(fovx * 0.5)
+    # fovx = 2.0 * math.atan(aspect_ratio * math.tan(fovy * 0.5))  # 转换为水平FOV
+    # print(fovy, fovx)
+    # fx = (W * 0.5) / math.tan(fovx * 0.5)
+    fx = fy 
+    # fx = fy * aspect_ratio
     cx = (W - 1) / 2.0
     cy = (H - 1) / 2.0
     return fx, fy, cx, cy
@@ -31,8 +34,9 @@ def make_K_from_fovx(fovx_deg, W, H, aspect_ratio=None):
         aspect_ratio = W / H
     fovx = d2r(fovx_deg)
     fx = (W * 0.5) / math.tan(fovx * 0.5)
-    v = 2.0 * math.atan(math.tan(fovx * 0.5) / aspect_ratio)
-    fy = (H * 0.5) / math.tan(v * 0.5)
+    # v = 2.0 * math.atan(math.tan(fovx * 0.5) / aspect_ratio)
+    # fy = (H * 0.5) / math.tan(v * 0.5)
+    fy = fx 
     cx = (W - 1) / 2.0
     cy = (H - 1) / 2.0
     return fx, fy, cx, cy
@@ -49,53 +53,49 @@ def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     
     pts_cam = np.stack([x, -y, -z], axis=-1).reshape(-1, 3)
     return pts_cam, uu.reshape(-1), vv.reshape(-1)
-
-# -------------------------- 从extrinsic_cam2world解析UE→OpenCV转换 --------------------------
-# def cam2world_to_cv(cam2world, pose_scale=1.0):
-#     """
-#     将UE的3x4相机矩阵转换为OpenCV系c2w矩阵
-#     cam2world: 3x4数组，格式为[R_ue(3x3) | t_ue(3x1)]
-#     """
-#     # 1. 提取UE系旋转和平移
-#     R_ue = cam2world[:, :3]  # 3x3旋转矩阵（UE系）
-#     t_ue = cam2world[:, 3]   # 3x1平移向量（UE系，未缩放）
-    
-#     # 2. 应用缩放（与正确脚本的pose_scale一致）
-#     t_scaled = t_ue * pose_scale
-    
-#     # 3. UE→OpenCV轴映射（与正确脚本的M_to_CV一致）
-#     M_to_CV = np.array([[0, 1,  0],
-#                            [0, 0, -1],
-#                            [1, 0,  0]], dtype=np.float64)
-#     # 旋转矩阵转换
-#     R_cv = M_to_CV @ R_ue @ M_to_CV.T
-#     # 平移向量转换（分量对应与正确脚本一致）
-#     t_cv = np.array([
-#         t_scaled[2],  # OpenCV X = UE X（前方向）
-#         t_scaled[1],  # OpenCV Y = UE Z（上方向）
-#         t_scaled[0]   # OpenCV Z = UE Y（右方向）
-#     ], dtype=np.float64)
-    
-#     # 4. 构造4x4 c2w矩阵
-#     c2w = np.eye(4, dtype=np.float64)
-#     c2w[:3, :3] = R_cv
-#     c2w[:3, 3] = t_cv
-#     return c2w, R_cv, t_cv
-
-def cam2world_to_cv_unchanged(cam2world, pose_scale=1.0):
+def opengl_to_opencv_transform():
     """
-    将UE的3x4相机矩阵转换为OpenCV系c2w矩阵
-    cam2world: 3x4数组，格式为[R_ue(3x3) | t_ue(3x1)]
+    将OpenGL坐标系转换为OpenCV坐标系
+    OpenGL: 相机看-Z, Y向上
+    OpenCV: 相机看+Z, Y向下
     """
-    # 1. 提取UE系旋转和平移
-    R_cv = cam2world[:, :3]  # 3x3旋转矩阵（UE系）
-    t_cv = cam2world[:, 3]   # 3x1平移向量（UE系，未缩放）
+    T = np.eye(4, dtype=np.float64)
+    T[1, 1] = 1  
+    T[2, 2] = 1 
+    return T
+
+def transform_opengl_to_opencv(cam2world_opengl):
+    """
+    将OpenGL格式的相机外参转换为OpenCV格式
+    """
+    T_gl_to_cv = opengl_to_opencv_transform()
     
-    # 4. 构造4x4 c2w矩阵
-    c2w = np.eye(4, dtype=np.float64)
-    c2w[:3, :3] = R_cv
-    c2w[:3, 3] = t_cv
-    return c2w, R_cv, t_cv
+    # 将3x4扩展为4x4
+    if cam2world_opengl.shape == (3, 4):
+        c2w_gl = np.eye(4)
+        c2w_gl[:3, :4] = cam2world_opengl
+    else:
+        c2w_gl = cam2world_opengl
+    
+    # 坐标系转换: OpenCV = T_gl_to_cv @ OpenGL
+    c2w_cv = T_gl_to_cv @ c2w_gl
+    
+    return c2w_cv[:3, :4]  # 返回3x4格式
+def cam2world_to_cv(cam2world, pose_scale=1.0):
+    T_gl_to_cv = opengl_to_opencv_transform()
+    if cam2world.shape == (3, 4):
+        c2w_gl = np.eye(4)
+        c2w_gl[:3, :4] = cam2world
+    else:
+        c2w_gl = cam2world
+    
+    # 坐标系转换: OpenCV = T_gl_to_cv @ OpenGL
+    c2w_cv = T_gl_to_cv @ c2w_gl
+    print(c2w_cv)
+    R_cv = c2w_cv[:3, :3]  
+    t_cv = c2w_cv[:3, 3]  
+    
+    return c2w_cv, R_cv, t_cv
 
 # -------------------------- 加载深度和相机文件（优先camera.json，再找meta.json） --------------------------
 def load_depth_and_meta(depthfile:str, and_rgb:bool):
@@ -178,7 +178,7 @@ def load_cloud_via_meta(depthfile:str,
     cam2world = np.array(cam_data['extrinsic_cam2world'], dtype=np.float64).reshape(3, 4)  # 3x4相机矩阵
     print("cam2world:\n", cam2world)
     # 2. 转换为OpenCV系c2w矩阵（与正确脚本对齐）
-    c2w, R_cv, t_cv = cam2world_to_cv_unchanged(cam2world, pose_scale)
+    c2w, R_cv, t_cv = cam2world_to_cv(cam2world, pose_scale)
     print(f"[DEBUG] 帧 {depthbnam} 的c2w矩阵:\n{c2w}")
 
     # 3. 计算内参（用垂直FOV，与正确脚本逻辑一致）

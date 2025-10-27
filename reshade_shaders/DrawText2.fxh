@@ -208,8 +208,22 @@ float DrawText_Digit( float2 pos, float size, float ratio, float2 tex, int digit
     float  t  = abs(data);
     int radix = floor(t)? ceil(log2(t)/3.32192809):0;
 
-    //early exit:
-    if(uv.x > digit+1 || -uv.x > radix+1) return -1.0;
+    // 计算符号位置：在数字开始前显示符号
+    int signPos = radix + (digit > 0 ? 1 : 0); // 考虑小数点位置
+    
+    // 显示符号
+    if (uv.x >= -signPos - 1 && uv.x < -signPos) {
+        if (data < 0) {
+            // 显示负号
+            float index = __Minus;
+            res += tex2D(samplerText, (frac(uv) + float2( index % 14.0, trunc(index / 14.0))) /
+                    float2( _DRAWTEXT_GRID_X, _DRAWTEXT_GRID_Y)).x;
+        }
+        return 1.0;
+    }
+
+    // 早期退出：如果超出显示范围
+    if(uv.x > digit+1 || -uv.x > radix+1 + (data < 0 ? 1 : 0)) return -1.0;
 
     float index = t;
     if(floor(uv.x) > 0)
@@ -217,8 +231,8 @@ float DrawText_Digit( float2 pos, float size, float ratio, float2 tex, int digit
     else
         for(int i = ceil(uv.x); i<0; i++) index /= 10.;
 
-    index = (uv.x >= -radix-!radix)? index%10 : (10+step(0, data)); //adding sign
-    index = (uv.x > 0 && uv.x < 1)? 12:index; //adding dot
+    index = (uv.x >= -radix-!radix)? index%10 : 11; // 使用空格
+    index = (uv.x > 0 && uv.x < 1)? 12:index; // 小数点位置
     index = digits[(uint)index];
 
     res  += tex2D(samplerText, (frac(uv) + float2( index % 14.0, trunc(index / 14.0))) /

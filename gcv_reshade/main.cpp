@@ -224,7 +224,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime* runtime,
                 g_video_fps = 1;
                 start_rec = true;
             } else if (runtime->is_key_pressed(VK_F7)) {
-                // Logic 2: 16fps, rgb video, controls, camera
+                // Logic 2: 16fps, rgb video, controls, camera  
                 g_recording_mode = 2;
                 g_video_fps = 16;
                 start_rec = true;

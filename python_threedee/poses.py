@@ -32,7 +32,8 @@ for json_path in json_paths:
         c2w = np.array(json.load(f)['extrinsic_cam2world']).reshape(3, 4)
         c2ws.append(c2w)
 c2ws = np.array(c2ws)
-
+print(c2ws.shape)
+# c2ws[:, :3, 3] /= 100
 # visualize the camera xyz
 camera_centers = c2ws[:,:3,3] / scale_factor
 camera_centers_color = np.zeros(camera_centers.shape)
@@ -63,14 +64,14 @@ camera_zs_color[:,2] = 1
 
 # plots
 pts = np.concatenate([
-    camera_centers,
-    global_x, global_y, global_z, 
+    # camera_centers,
+    # global_x, global_y, global_z, 
     camera_xs, camera_ys, 
     camera_zs,
 ], axis=0)
 colors = np.concatenate([
-    camera_centers_color,
-    global_x_color, global_y_color, global_z_color, 
+    # camera_centers_color,
+    # global_x_color, global_y_color, global_z_color, 
     camera_xs_color, camera_ys_color, 
     camera_zs_color,
 ], axis=0)

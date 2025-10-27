@@ -128,15 +128,15 @@ scs_value_fvector_t rotate(const scs_value_euler_t& orientation, const scs_value
     const float sin_pitch = sinf(pitch_radians);
     const float cos_roll = cosf(roll_radians);
     const float sin_roll = sinf(roll_radians);
-
+    // Z: back
     const float post_roll_x = vector.x * cos_roll - vector.y * sin_roll;
     const float post_roll_y = vector.x * sin_roll + vector.y * cos_roll;
     const float post_roll_z = vector.z;
-
+    // x：right
     const float post_pitch_x = post_roll_x;
     const float post_pitch_y = post_roll_y * cos_pitch - post_roll_z * sin_pitch;
     const float post_pitch_z = post_roll_y * sin_pitch + post_roll_z * cos_pitch;
-
+    // y：up
     scs_value_fvector_t result;
     result.x = post_pitch_x * cos_heading + post_pitch_z * sin_heading;
     result.y = post_pitch_y;
@@ -157,16 +157,16 @@ void euler_to_matrix(const scs_value_euler_t& orientation, float matrix[9]) {
     const float sin_r = sinf(r_rad);
 
     matrix[0] = cos_h * cos_r + sin_h * sin_p * sin_r;
-    matrix[1] = cos_h * sin_p * sin_r - sin_h * cos_r;
-    matrix[2] = cos_p * sin_r;
+    matrix[1] = -cos_h * sin_r + sin_h * sin_p * sin_r;
+    matrix[2] = sin_h * cos_p;
 
-    matrix[3] = sin_h * cos_p;
-    matrix[4] = cos_h * cos_p;
+    matrix[3] = cos_p * sin_r;
+    matrix[4] = cos_p * cos_r;
     matrix[5] = -sin_p;
 
-    matrix[6] = sin_h * sin_p * cos_r - cos_h * sin_r;
+    matrix[6] = -sin_h * cos_r + cos_h * sin_p * sin_r;
     matrix[7] = sin_h * sin_r + cos_h * sin_p * cos_r;
-    matrix[8] = cos_p * cos_r;
+    matrix[8] = cos_h * cos_p;
 }
 
 void multiply_matrices(const float a[9], const float b[9], float result[9]) {
@@ -196,13 +196,13 @@ void rotation_matrix_to_view_matrix(const float rotation_matrix[9], double view_
     view_matrix[9] = static_cast<double>(rotation_matrix[7]);
     view_matrix[10] = static_cast<double>(rotation_matrix[8]);
 
-    view_matrix[3] = 0.0f;
-    view_matrix[7] = 0.0f;
-    view_matrix[11] = 0.0f;
-    view_matrix[12] = 0.0f;
-    view_matrix[13] = 0.0f;
-    view_matrix[14] = 0.0f;
-    view_matrix[15] = 1.0f;
+    view_matrix[3] = 0.0;
+    view_matrix[7] = 0.0;
+    view_matrix[11] = 0.0;
+    view_matrix[12] = 0.0;
+    view_matrix[13] = 0.0;
+    view_matrix[14] = 0.0;
+    view_matrix[15] = 1.0;
 }
 
 void update_camera_buffer(const scs_value_dvector_t& head_position,
@@ -224,8 +224,8 @@ void update_camera_buffer(const scs_value_dvector_t& head_position,
     euler_to_matrix(truck_orientation, truck_matrix);
 
     float temp_matrix[9], combined_matrix[9];
-    multiply_matrices(head_matrix, cabin_matrix, temp_matrix);
-    multiply_matrices(temp_matrix, truck_matrix, combined_matrix);
+    multiply_matrices(truck_matrix, cabin_matrix, temp_matrix);
+    multiply_matrices(temp_matrix, head_matrix, combined_matrix);
 
     rotation_matrix_to_view_matrix(combined_matrix, g_shared_camera_buffer->matrix);
 
