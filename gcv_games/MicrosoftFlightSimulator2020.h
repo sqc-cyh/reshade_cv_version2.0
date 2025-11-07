@@ -1,15 +1,19 @@
 #pragma once
 
+#include <Windows.h>
+
 #include "game_with_camera_data_in_one_dll.h"
+#include "msfs_simconnect_manager.h"
 
-class GameRoR2 : public GameWithCameraDataInOneDLL {
-public:
-    virtual std::string gamename_simpler() const override { return "Shipbreaker"; }
-    virtual std::string gamename_verbose() const override;
-
+class GameMicrosoftFlightSimulator2020 : public GameWithCameraDataInOneDLL {
+   protected:
     virtual std::string camera_dll_name() const override;
     virtual uint64_t camera_dll_mem_start() const override;
     virtual GameCamDLLMatrixType camera_dll_matrix_format() const override;
+
+   public:
+    virtual std::string gamename_simpler() const override { return "MicrosoftFlightSimulator2020"; }
+    virtual std::string gamename_verbose() const override;
 
     virtual scriptedcam_checkbuf_funptr get_scriptedcambuf_checkfun() const override;
     virtual uint64_t get_scriptedcambuf_sizebytes() const override;
@@ -19,4 +23,4 @@ public:
     virtual float convert_to_physical_distance_depth_u64(uint64_t depthval) const override;
 };
 
-REGISTER_GAME_INTERFACE(GameRoR2, 0, "Shipbreaker.exe");
+REGISTER_GAME_INTERFACE(GameMicrosoftFlightSimulator2020, 0, "flightsimulator.exe");

@@ -1,8 +1,0 @@
-Universal Camera Mod
-
-Modifies all truck interior cameras:
-- FOV: 60°
-- Near plane: 0.2
-- Far plane: 1600
-
-Works with all Euro Truck Simulator 2 trucks.

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -19,6 +20,7 @@
 
 #include "copy_texture_into_packedbuf.h"
 #include "gcv_games/game_interface_factory.h"
+#include "gcv_games/msfs_simconnect_manager.h"
 #include "gcv_utils/miscutils.h"
 #include "generic_depth_struct.h"
 #include "grabbers.h"
@@ -29,51 +31,24 @@
 #include "segmentation/reshade_hooks.hpp"
 #include "segmentation/segmentation_app_data.hpp"
 #include "tex_buffer_utils.h"
-
-#include "hud_renderer.h"
-#include "grabbers.h"
-#include "recorder.h"
-
-#include <fstream>
-#include <Windows.h>
-#include <cstdio>
-#include <vector>
-#include <memory>
-#include <string>
-#include <sstream>
-#include <cstdint>
-#include <thread>
-#include <atomic>
-#include <cstring>
-#include <process.h>
-#include <ShlObj.h>
-#include <algorithm>
-#include <nlohmann/json.hpp>
-#include <cmath> // 确保包含了 cmath 用于 sin 和 cos
-#include <cnpy.h>
 using Json = nlohmann::json_abi_v3_12_0::json;
 
-
 static double g_camera_data_buffer[17] = {
-	1.20040525131452021e-12,// 第二个魔数签名
-    // 1.38097189588312856e-12, 
-    0.0, 0.0, 0.0, 0.0, 0.0, 980.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-};
+    1.20040525131452021e-12,  // 第二个魔数签名
+    // 1.38097189588312856e-12,
+    0.0, 0.0, 0.0, 0.0, 0.0, 980.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 static double g_camera_buffer_counter = 0.0;
 
-// 为 ReShade 5.8.0 API 创建重载函数
-reshade::api::effect_uniform_variable find_uniform(reshade::api::effect_runtime* runtime, const char* name)
-{
-    if (!runtime) return { 0 };
+reshade::api::effect_uniform_variable find_uniform(reshade::api::effect_runtime* runtime, const char* name) {
+    if (!runtime) return {0};
     reshade::api::effect_uniform_variable var = runtime->find_uniform_variable("IgcsSourceTester.fx", name);
     if (var == 0) {
-        var = runtime->find_uniform_variable("IgcsDof.fx", name); // 回退查找
+        var = runtime->find_uniform_variable("IgcsDof.fx", name);  // 回退查找
     }
     return var;
 }
 
-bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name, bool& value)
-{
+bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name, bool& value) {
     reshade::api::effect_uniform_variable var = find_uniform(runtime, name);
     if (var != 0) {
         runtime->get_uniform_value_bool(var, &value, 1);
@@ -82,8 +57,7 @@ bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name,
     return false;
 }
 
-bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name, float& value)
-{
+bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name, float& value) {
     reshade::api::effect_uniform_variable var = find_uniform(runtime, name);
     if (var != 0) {
         runtime->get_uniform_value_float(var, &value, 1);
@@ -92,8 +66,7 @@ bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name,
     return false;
 }
 
-bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name, float* values, size_t count)
-{
+bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name, float* values, size_t count) {
     reshade::api::effect_uniform_variable var = find_uniform(runtime, name);
     if (var != 0) {
         runtime->get_uniform_value_float(var, values, count);
@@ -102,15 +75,11 @@ bool read_uniform_value(reshade::api::effect_runtime* runtime, const char* name,
     return false;
 }
 
-// 这部分缓冲区生成的相机需要后处理
-
-void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
-{
+void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime) {
     auto& shdata = runtime->get_device()->get_private_data<image_writer_thread_pool>();
 
     bool available = false;
-    if (!read_uniform_value(runtime, "IGCS_cameraDataAvailable", available) || !available)
-    {
+    if (!read_uniform_value(runtime, "IGCS_cameraDataAvailable", available) || !available) {
         // 如果相机数据不可用，清零缓冲区
         for (int i = 2; i <= 14; ++i) g_camera_data_buffer[i] = 0.0;
         g_camera_data_buffer[15] = g_camera_data_buffer[1];
@@ -120,8 +89,8 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
 
     // 1. 从 IGCS 读取原始相机数据
     float fov = 0.0f;
-    float camera_ue_pos[3] = {0.0f};  // UE坐标系下的位置 (+X前, +Y右, +Z上)
-    float roll = 0.0f, pitch = 0.0f, yaw = 0.0f; // 弧度
+    float camera_ue_pos[3] = {0.0f};              // UE坐标系下的位置 (+X前, +Y右, +Z上)
+    float roll = 0.0f, pitch = 0.0f, yaw = 0.0f;  // 弧度
 
     read_uniform_value(runtime, "IGCS_cameraFoV", fov);
     read_uniform_value(runtime, "IGCS_cameraWorldPosition", camera_ue_pos, 3);
@@ -133,12 +102,9 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
     auto* game_interface = shdata.get_game_interface();
 
     // 3. 调用游戏特定的后处理函数
-    if (game_interface)
-    {
+    if (game_interface) {
         game_interface->process_camera_buffer_from_igcs(g_camera_data_buffer, camera_ue_pos, roll, pitch, yaw, fov);
-    }
-    else
-    {
+    } else {
         // 如果没有找到游戏接口，清空数据以避免发送脏数据
         for (int i = 2; i <= 14; ++i) g_camera_data_buffer[i] = 0.0;
     }
@@ -150,17 +116,13 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime)
 
     double poshash1 = 0.0;
     double poshash2 = 0.0;
-    for (int i = 1; i <= 14; ++i)
-    {
+    for (int i = 1; i <= 14; ++i) {
         poshash1 += g_camera_data_buffer[i];
         poshash2 += (i % 2 == 0 ? -g_camera_data_buffer[i] : g_camera_data_buffer[i]);
     }
     g_camera_data_buffer[15] = poshash1;
     g_camera_data_buffer[16] = poshash2;
 }
-
-
-
 
 typedef std::chrono::steady_clock hiresclock;
 
@@ -185,6 +147,7 @@ static void on_init(reshade::api::device* device) {
     shdata.init_time = hiresclock::now();
 }
 static void on_destroy(reshade::api::device* device) {
+    MSFSSimConnectManager::get().shutdown();
     device->get_private_data<image_writer_thread_pool>().change_num_threads(0);
     device->get_private_data<image_writer_thread_pool>().print_waiting_log_messages();
 
@@ -196,7 +159,6 @@ static void on_destroy(reshade::api::device* device) {
         fclose(g_actions_csv);
         g_actions_csv = nullptr;
     }
-
     device->destroy_private_data<image_writer_thread_pool>();
 }
 
@@ -210,8 +172,9 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime* runtime,
     float shadercamposbuf[4];
     reshade::api::device* const device = runtime->get_device();
     auto& segmapp = device->get_private_data<segmentation_app_data>();
-	UpdateCameraBufferFromReshade(runtime);
-    { // record
+    MSFSSimConnectManager::get().update();
+    UpdateCameraBufferFromReshade(runtime);
+    {  // record
         const int64_t now_us = std::chrono::duration_cast<std::chrono::microseconds>(hiresclock::now() - shdata.init_time).count();
         const bool ctrl_down = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
 
@@ -224,9 +187,9 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime* runtime,
                 g_video_fps = 1;
                 start_rec = true;
             } else if (runtime->is_key_pressed(VK_F7)) {
-                // Logic 2: 16fps, rgb video, controls, camera  
+                // Logic 2: 16fps, rgb video, controls, camera
                 g_recording_mode = 2;
-                g_video_fps = 16;
+                g_video_fps = 24;
                 start_rec = true;
             }
 
@@ -305,7 +268,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime* runtime,
                     const int64_t delta_us_control = now_us_control_2 - now_us_control_1;
                     reshade::log_message(reshade::log_level::info,
                                          ("Frame delta: Δt=%lld us", std::to_string(delta_us_control).c_str()));
-                    if (std::abs(delta_us_control) > 5000) {
+                    if (std::abs(delta_us_control) > 1000) {
                         delta_control_ok = false;
                         reshade::log_message(reshade::log_level::info,
                                              ("Frame skipped: Δt=%lld us", std::to_string(delta_us_control).c_str()));
@@ -345,7 +308,7 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime* runtime,
                     const int64_t delta_us_depth = now_us_depth_2 - now_us_depth_1;
                     reshade::log_message(reshade::log_level::info,
                                          ("Frame delta: Δt=%lld us", std::to_string(delta_us_depth).c_str()));
-                    if (std::abs(delta_us_depth) > 50000) {
+                    if (std::abs(delta_us_depth) > 9000) {
                         delta_depth_ok = false;
                         reshade::log_message(reshade::log_level::info,
                                              ("Frame skipped: Δt=%lld us", std::to_string(delta_us_depth).c_str()));
@@ -382,6 +345,8 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime* runtime,
 
                     if (grab_bgra_frame(q, color_res, bgra, w, h)) {
                         g_copy_fail_in_row = 0;
+                        // hud::draw_keys_bgra(bgra.data(), w, h, keymask);
+                        // 不画了
                         g_rec->push_color(bgra.data(), w, h);
                         color_ok = true;
                     }

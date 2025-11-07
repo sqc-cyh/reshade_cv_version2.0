@@ -235,7 +235,7 @@ void update_camera_buffer(const scs_value_dvector_t& head_position,
     g_shared_camera_buffer->matrix[11] = head_position.z;
 
     // FOV
-    g_shared_camera_buffer->fov = 60.0;
+    g_shared_camera_buffer->fov = 77.0;
 
     // Calculate hash values for verification
     g_shared_camera_buffer->hash1 = g_shared_camera_buffer->counter;

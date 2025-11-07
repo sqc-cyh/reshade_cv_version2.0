@@ -1,448 +1,152 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\3rdparty\cnpy.cpp">
-      <Filter>3rdparty</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_utils\image_queue_entry.cpp">
-      <Filter>gcv_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_utils\memread.cpp">
-      <Filter>gcv_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_utils\miscutils.cpp">
-      <Filter>gcv_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_utils\simple_packed_buf.cpp">
-      <Filter>gcv_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="copy_texture_into_packedbuf.cpp">
-      <Filter>gcv_reshade</Filter>
-    </ClCompile>
-    <ClCompile Include="image_writer_thread_pool.cpp">
-      <Filter>gcv_reshade</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>gcv_reshade</Filter>
-    </ClCompile>
-    <ClCompile Include="tex_buffer_utils.cpp">
-      <Filter>gcv_reshade</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdparty\fpzip\error.cpp">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdparty\fpzip\rcdecoder.cpp">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdparty\fpzip\rcencoder.cpp">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdparty\fpzip\rcqsmodel.cpp">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdparty\fpzip\read.cpp">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdparty\fpzip\version.cpp">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdparty\fpzip\write.cpp">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\game_interface.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\Crysis.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_utils\geometry.cpp">
-      <Filter>gcv_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\Cyberpunk2077.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\Control.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\game_interface_factory.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_utils\scan_for_camera_matrix.cpp">
-      <Filter>gcv_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\game_with_camera_data_in_one_dll.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\HorizonZeroDawn.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\Witcher3.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_utils\depth_utils.cpp">
-      <Filter>gcv_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\ResidentEvils.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_utils\camera_data_struct.cpp">
-      <Filter>gcv_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_utils\log_queue_thread_safe.cpp">
-      <Filter>gcv_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\render_target_stats\render_target_stats_tracking.cpp">
-      <Filter>render_target_stats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\segmentation\semseg_shader_register_bind.cpp">
-      <Filter>segmentation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\segmentation\reshade_hooks.cpp">
-      <Filter>segmentation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\segmentation\buffer_indexing_colorization.cpp">
-      <Filter>segmentation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\DishonoredDOTO.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\AssassinsCreedOdyssey.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\AssassinsCreedOrigin.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\AssassinsCreedShadows.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\AssassinsCreedValhalla.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\Borderlands3.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\Stray.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\HogwartsLegacy.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\BlackMythWukong.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="ffmpeg_pipe_win.cpp">
-      <Filter>gcv_reshade</Filter>
-    </ClCompile>
-    <ClCompile Include="grabbers.cpp">
-      <Filter>gcv_reshade</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_renderer.cpp">
-      <Filter>gcv_reshade</Filter>
-    </ClCompile>
-    <ClCompile Include="recorder.cpp">
-      <Filter>gcv_reshade</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\GTAV.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\EuroTruckSimulator2.cpp">
-    <ClCompile Include="..\gcv_games\RDR2.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\RoR2.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\DarkSoulsIII.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\Sekiro.cpp">
-	    <Filter>gcv_games</Filter>
-	</ClCompile>
-    <ClCompile Include="..\gcv_games\Shipbreaker.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gcv_games\Sekiro.cpp">
-      <Filter>gcv_games</Filter>
-    </ClCompile>
+    <ClCompile Include="..\3rdparty\cnpy.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\error.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\rcdecoder.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\rcencoder.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\rcqsmodel.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\read.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\version.cpp" />
+    <ClCompile Include="..\3rdparty\fpzip\write.cpp" />
+    <ClCompile Include="..\gcv_games\Control.cpp" />
+    <ClCompile Include="..\gcv_games\Crysis.cpp" />
+    <ClCompile Include="..\gcv_games\Cyberpunk2077.cpp" />
+    <ClCompile Include="..\gcv_games\DarkSoulsIII.cpp" />
+    <ClCompile Include="..\gcv_games\DishonoredDOTO.cpp" />
+    <ClCompile Include="..\gcv_games\EuroTruckSimulator2.cpp" />
+    <ClCompile Include="..\gcv_games\AssassinsCreedOdyssey.cpp" />
+    <ClCompile Include="..\gcv_games\AssassinsCreedOrigin.cpp" />
+    <ClCompile Include="..\gcv_games\AssassinsCreedShadows.cpp" />
+    <ClCompile Include="..\gcv_games\AssassinsCreedValhalla.cpp" />
+    <ClCompile Include="..\gcv_games\Borderlands3.cpp" />
+    <ClCompile Include="..\gcv_games\Stray.cpp" />
+    <ClCompile Include="..\gcv_games\HogwartsLegacy.cpp" />
+    <ClCompile Include="..\gcv_games\BlackMythWukong.cpp" />
+    <ClCompile Include="..\gcv_games\game_interface.cpp" />
+    <ClCompile Include="..\gcv_games\game_interface_factory.cpp" />
+    <ClCompile Include="..\gcv_games\game_with_camera_data_in_one_dll.cpp" />
+    <ClCompile Include="..\gcv_games\GTAV.cpp" />
+    <ClCompile Include="..\gcv_games\HorizonZeroDawn.cpp" />
+    <ClCompile Include="..\gcv_games\RDR2.cpp" />
+    <ClCompile Include="..\gcv_games\ResidentEvils.cpp" />
+    <ClCompile Include="..\gcv_games\RoR2.cpp" />
+    <ClCompile Include="..\gcv_games\Sekiro.cpp" />
+    <ClCompile Include="..\gcv_games\Witcher3.cpp" />
+    <ClCompile Include="..\gcv_utils\camera_data_struct.cpp" />
+    <ClCompile Include="..\gcv_utils\depth_utils.cpp" />
+    <ClCompile Include="..\gcv_utils\geometry.cpp" />
+    <ClCompile Include="..\gcv_utils\image_queue_entry.cpp" />
+    <ClCompile Include="..\gcv_utils\log_queue_thread_safe.cpp" />
+    <ClCompile Include="..\gcv_utils\memread.cpp" />
+    <ClCompile Include="..\gcv_utils\miscutils.cpp" />
+    <ClCompile Include="..\gcv_utils\scan_for_camera_matrix.cpp" />
+    <ClCompile Include="..\gcv_utils\simple_packed_buf.cpp" />
+    <ClCompile Include="..\render_target_stats\render_target_stats_tracking.cpp" />
+    <ClCompile Include="..\segmentation\buffer_indexing_colorization.cpp" />
+    <ClCompile Include="..\segmentation\reshade_hooks.cpp" />
+    <ClCompile Include="..\segmentation\semseg_shader_register_bind.cpp" />
+    <ClCompile Include="ffmpeg_pipe_win.cpp" />
+    <ClCompile Include="grabbers.cpp" />
+    <ClCompile Include="hud_renderer.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="copy_texture_into_packedbuf.cpp" />
+    <ClCompile Include="image_writer_thread_pool.cpp" />
+    <ClCompile Include="recorder.cpp" />
+    <ClCompile Include="tex_buffer_utils.cpp" />
+    <ClCompile Include="..\gcv_games\MicrosoftFlightSimulator2020.cpp" />
+    <ClCompile Include="..\gcv_games\MicrosoftFlightSimulator2024.cpp" />
+    <ClCompile Include="..\gcv_games\msfs_simconnect_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\3rdparty\concurrentqueue.h">
-      <Filter>3rdparty</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\cnpy.h">
-      <Filter>3rdparty</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\stb_image_write.h">
-      <Filter>3rdparty</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\image_queue_entry.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\memread.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\miscutils.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\simple_packed_buf.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="copy_texture_into_packedbuf.h">
-      <Filter>gcv_reshade</Filter>
-    </ClInclude>
-    <ClInclude Include="generic_depth_struct.h">
-      <Filter>gcv_reshade</Filter>
-    </ClInclude>
-    <ClInclude Include="image_writer_thread_pool.h">
-      <Filter>gcv_reshade</Filter>
-    </ClInclude>
-    <ClInclude Include="tex_buffer_utils.h">
-      <Filter>gcv_reshade</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\codec.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\fpe.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\fpzip.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\front.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\pccodec.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\pcdecoder.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\pcencoder.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\pcmap.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\rcdecoder.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\rcencoder.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\rcmodel.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\rcqsmodel.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\read.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\types.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdparty\fpzip\write.h">
-      <Filter>3rdparty\fpzip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\game_interface_factory.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\game_interface.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\Crysis.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\geometry.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\Cyberpunk2077.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\Control.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\game_interface_factory_registration.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\scan_for_camera_matrix.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\game_with_camera_data_in_one_dll.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\HorizonZeroDawn.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\Witcher3.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\depth_utils.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\ResidentEvils.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\scripted_cam_buf_templates.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\camera_data_struct.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\log_queue_thread_safe.h">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\render_target_stats\reshade_tex_format_info.hpp">
-      <Filter>render_target_stats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\render_target_stats\clicked_rgb_rendertargets.hpp">
-      <Filter>render_target_stats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\render_target_stats\render_target_stats_tracking.hpp">
-      <Filter>render_target_stats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\semseg_shader_register_bind.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\resource_helper.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\segmentation_app_data.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\draws_counting_data_buffer.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\reshade_hooks.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\command_list_state.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\buffer_indexing_colorization.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\typed_2d_array.hpp">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\shader_types.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\colormap_util.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_utils\assert_utils.hpp">
-      <Filter>gcv_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\segmentation\reshade_graphics_api_util.hpp">
-      <Filter>segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\DishonoredDOTO.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="ffmpeg_pipe_win.h">
-      <Filter>gcv_reshade</Filter>
-    </ClInclude>
-    <ClInclude Include="grabbers.h">
-      <Filter>gcv_reshade</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_renderer.h">
-      <Filter>gcv_reshade</Filter>
-    </ClInclude>
-    <ClInclude Include="recorder.h">
-      <Filter>gcv_reshade</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\GTAV.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\EuroTruckSimulator2.h">
-    <ClInclude Include="..\gcv_games\RDR2.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\RoR2.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\AssassinsCreedOdyssey.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\AssassinsCreedOrigin.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\AssassinsCreedShadows.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\AssassinsCreedValhalla.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\DarkSoulsIII.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\Borderlands3.h">
-	    <Filter>gcv_games</Filter>
-	</ClInclude>
-    <ClInclude Include="..\gcv_games\Shipbreaker.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\HogwartsLegacy.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\Sekiro.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\BlackMythWukong.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gcv_games\Stray.h">
-      <Filter>gcv_games</Filter>
-    </ClInclude>
+    <ClInclude Include="..\3rdparty\cnpy.h" />
+    <ClInclude Include="..\3rdparty\concurrentqueue.h" />
+    <ClInclude Include="..\3rdparty\fpzip\codec.h" />
+    <ClInclude Include="..\3rdparty\fpzip\fpe.h" />
+    <ClInclude Include="..\3rdparty\fpzip\fpzip.h" />
+    <ClInclude Include="..\3rdparty\fpzip\front.h" />
+    <ClInclude Include="..\3rdparty\fpzip\pccodec.h" />
+    <ClInclude Include="..\3rdparty\fpzip\pcdecoder.h" />
+    <ClInclude Include="..\3rdparty\fpzip\pcencoder.h" />
+    <ClInclude Include="..\3rdparty\fpzip\pcmap.h" />
+    <ClInclude Include="..\3rdparty\fpzip\rcdecoder.h" />
+    <ClInclude Include="..\3rdparty\fpzip\rcencoder.h" />
+    <ClInclude Include="..\3rdparty\fpzip\rcmodel.h" />
+    <ClInclude Include="..\3rdparty\fpzip\rcqsmodel.h" />
+    <ClInclude Include="..\3rdparty\fpzip\read.h" />
+    <ClInclude Include="..\3rdparty\fpzip\types.h" />
+    <ClInclude Include="..\3rdparty\fpzip\write.h" />
+    <ClInclude Include="..\3rdparty\stb_image_write.h" />
+    <ClInclude Include="..\gcv_games\AssassinsCreedOdyssey.h" />
+    <ClInclude Include="..\gcv_games\AssassinsCreedOrigin.h" />
+    <ClInclude Include="..\gcv_games\AssassinsCreedShadows.h" />
+    <ClInclude Include="..\gcv_games\AssassinsCreedValhalla.h" />
+    <ClInclude Include="..\gcv_games\BlackMythWukong.h" />
+    <ClInclude Include="..\gcv_games\Borderlands3.h" />
+    <ClInclude Include="..\gcv_games\Control.h" />
+    <ClInclude Include="..\gcv_games\Crysis.h" />
+    <ClInclude Include="..\gcv_games\Cyberpunk2077.h" />
+    <ClInclude Include="..\gcv_games\DarkSoulsIII.h" />
+    <ClInclude Include="..\gcv_games\DishonoredDOTO.h" />
+    <ClInclude Include="..\gcv_games\EuroTruckSimulator2.h" />
+    <ClInclude Include="..\gcv_games\game_interface_factory.h" />
+    <ClInclude Include="..\gcv_games\game_interface.h" />
+    <ClInclude Include="..\gcv_games\game_interface_factory_registration.h" />
+    <ClInclude Include="..\gcv_games\game_with_camera_data_in_one_dll.h" />
+    <ClInclude Include="..\gcv_games\GTAV.h" />
+    <ClInclude Include="..\gcv_games\HogwartsLegacy.h" />
+    <ClInclude Include="..\gcv_games\HorizonZeroDawn.h" />
+    <ClInclude Include="..\gcv_games\RDR2.h" />
+    <ClInclude Include="..\gcv_games\ResidentEvils.h" />
+    <ClInclude Include="..\gcv_games\RoR2.h" />
+    <ClInclude Include="..\gcv_games\Sekiro.h" />
+    <ClInclude Include="..\gcv_games\Stray.h" />
+    <ClInclude Include="..\gcv_games\Witcher3.h" />
+    <ClInclude Include="..\gcv_utils\assert_utils.hpp" />
+    <ClInclude Include="..\gcv_utils\camera_data_struct.h" />
+    <ClInclude Include="..\gcv_utils\depth_utils.h" />
+    <ClInclude Include="..\gcv_utils\geometry.h" />
+    <ClInclude Include="..\gcv_utils\image_queue_entry.h" />
+    <ClInclude Include="..\gcv_utils\log_queue_thread_safe.h" />
+    <ClInclude Include="..\gcv_utils\memread.h" />
+    <ClInclude Include="..\gcv_utils\miscutils.h" />
+    <ClInclude Include="..\gcv_utils\scan_for_camera_matrix.h" />
+    <ClInclude Include="..\gcv_utils\scripted_cam_buf_templates.h" />
+    <ClInclude Include="..\gcv_utils\simple_packed_buf.h" />
+    <ClInclude Include="..\gcv_utils\typed_2d_array.hpp" />
+    <ClInclude Include="..\render_target_stats\clicked_rgb_rendertargets.hpp" />
+    <ClInclude Include="..\render_target_stats\render_target_stats_tracking.hpp" />
+    <ClInclude Include="..\render_target_stats\reshade_tex_format_info.hpp" />
+    <ClInclude Include="..\segmentation\buffer_indexing_colorization.hpp" />
+    <ClInclude Include="..\segmentation\colormap_util.hpp" />
+    <ClInclude Include="..\segmentation\command_list_state.hpp" />
+    <ClInclude Include="..\segmentation\reshade_graphics_api_util.hpp" />
+    <ClInclude Include="..\segmentation\reshade_hooks.hpp" />
+    <ClInclude Include="..\segmentation\resource_helper.hpp" />
+    <ClInclude Include="..\segmentation\semseg_shader_register_bind.hpp" />
+    <ClInclude Include="..\segmentation\segmentation_app_data.hpp" />
+    <ClInclude Include="..\segmentation\draws_counting_data_buffer.hpp" />
+    <ClInclude Include="..\segmentation\shader_types.hpp" />
+    <ClInclude Include="ffmpeg_pipe_win.h" />
+    <ClInclude Include="generic_depth_struct.h" />
+    <ClInclude Include="grabbers.h" />
+    <ClInclude Include="hud_renderer.h" />
+    <ClInclude Include="image_writer_thread_pool.h" />
+    <ClInclude Include="copy_texture_into_packedbuf.h" />
+    <ClInclude Include="recorder.h" />
+    <ClInclude Include="tex_buffer_utils.h" />
+    <ClInclude Include="..\gcv_games\MicrosoftFlightSimulator2020.h" />
+    <ClInclude Include="..\gcv_games\MicrosoftFlightSimulator2024.h" />
+    <ClInclude Include="..\gcv_games\msfs_simconnect_manager.h" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="3rdparty">
-      <UniqueIdentifier>{cb01a159-16ea-42ab-82aa-1f540bb83a22}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gcv_utils">
-      <UniqueIdentifier>{6a9aad9a-e3f9-451f-b5a2-07636192ebc4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gcv_reshade">
-      <UniqueIdentifier>{a107ed8a-d794-4ed7-ae47-a3a121ff9442}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gcv_games">
-      <UniqueIdentifier>{9e85a5a2-f143-4663-9f04-69d11ee83617}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="3rdparty\fpzip">
-      <UniqueIdentifier>{ebc3f676-9632-4fca-8cca-3435a5c9d072}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="render_target_stats">
-      <UniqueIdentifier>{e2e079b4-4823-4c43-8a94-bc584530c9d8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="segmentation">
-      <UniqueIdentifier>{26bb8fa0-931a-41b3-918d-08901c0e2f83}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\3rdparty\fpzip\fpe.inl">
-      <Filter>3rdparty\fpzip</Filter>
-    </None>
-    <None Include="..\3rdparty\fpzip\pccodec.inl">
-      <Filter>3rdparty\fpzip</Filter>
-    </None>
-    <None Include="..\3rdparty\fpzip\pcdecoder.inl">
-      <Filter>3rdparty\fpzip</Filter>
-    </None>
-    <None Include="..\3rdparty\fpzip\pcencoder.inl">
-      <Filter>3rdparty\fpzip</Filter>
-    </None>
-    <None Include="..\3rdparty\fpzip\pcmap.inl">
-      <Filter>3rdparty\fpzip</Filter>
-    </None>
-    <None Include="..\3rdparty\fpzip\rcdecoder.inl">
-      <Filter>3rdparty\fpzip</Filter>
-    </None>
-    <None Include="..\3rdparty\fpzip\rcencoder.inl">
-      <Filter>3rdparty\fpzip</Filter>
-    </None>
-    <None Include="..\3rdparty\fpzip\rcqsmodel.inl">
-      <Filter>3rdparty\fpzip</Filter>
-    </None>
+    <None Include="..\3rdparty\fpzip\fpe.inl" />
+    <None Include="..\3rdparty\fpzip\pccodec.inl" />
+    <None Include="..\3rdparty\fpzip\pcdecoder.inl" />
+    <None Include="..\3rdparty\fpzip\pcencoder.inl" />
+    <None Include="..\3rdparty\fpzip\pcmap.inl" />
+    <None Include="..\3rdparty\fpzip\rcdecoder.inl" />
+    <None Include="..\3rdparty\fpzip\rcencoder.inl" />
+    <None Include="..\3rdparty\fpzip\rcqsmodel.inl" />
   </ItemGroup>
 </Project>

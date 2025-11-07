@@ -53,49 +53,23 @@ def backproject_points_from_z_depth(depth, fx, fy, cx, cy, stride=1):
     
     pts_cam = np.stack([x, -y, -z], axis=-1).reshape(-1, 3)
     return pts_cam, uu.reshape(-1), vv.reshape(-1)
-def opengl_to_opencv_transform():
-    """
-    将OpenGL坐标系转换为OpenCV坐标系
-    OpenGL: 相机看-Z, Y向上
-    OpenCV: 相机看+Z, Y向下
-    """
+def my_transform():
     T = np.eye(4, dtype=np.float64)
-    T[1, 1] = 1  
-    T[2, 2] = 1 
-    return T
 
-def transform_opengl_to_opencv(cam2world_opengl):
-    """
-    将OpenGL格式的相机外参转换为OpenCV格式
-    """
-    T_gl_to_cv = opengl_to_opencv_transform()
-    
-    # 将3x4扩展为4x4
-    if cam2world_opengl.shape == (3, 4):
-        c2w_gl = np.eye(4)
-        c2w_gl[:3, :4] = cam2world_opengl
-    else:
-        c2w_gl = cam2world_opengl
-    
-    # 坐标系转换: OpenCV = T_gl_to_cv @ OpenGL
-    c2w_cv = T_gl_to_cv @ c2w_gl
-    
-    return c2w_cv[:3, :4]  # 返回3x4格式
+    return T
 def cam2world_to_cv(cam2world, pose_scale=1.0):
-    T_gl_to_cv = opengl_to_opencv_transform()
+    myTransform = my_transform()
     if cam2world.shape == (3, 4):
-        c2w_gl = np.eye(4)
-        c2w_gl[:3, :4] = cam2world
+        c2w = np.eye(4)
+        c2w[:3, :4] = cam2world
     else:
-        c2w_gl = cam2world
+        c2w = cam2world
     
-    # 坐标系转换: OpenCV = T_gl_to_cv @ OpenGL
-    c2w_cv = T_gl_to_cv @ c2w_gl
-    print(c2w_cv)
-    R_cv = c2w_cv[:3, :3]  
-    t_cv = c2w_cv[:3, 3]  
+    c2w = myTransform @ c2w
+    R_cv = c2w[:3, :3]  
+    t_cv = c2w[:3, 3]  
     
-    return c2w_cv, R_cv, t_cv
+    return c2w, R_cv, t_cv
 
 # -------------------------- 加载深度和相机文件（优先camera.json，再找meta.json） --------------------------
 def load_depth_and_meta(depthfile:str, and_rgb:bool):

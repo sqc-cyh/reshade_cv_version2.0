@@ -45,10 +45,12 @@
     <TargetExt>.addon</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(MSFS_SDK)\SimConnect SDK\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(MSFS_SDK)\SimConnect SDK\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(MSFS_SDK)\SimConnect SDK\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(MSFS_SDK)\SimConnect SDK\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <VcpkgUseStatic>true</VcpkgUseStatic>
@@ -68,14 +70,14 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;C:\MSFS SDK\SimConnect SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)build\x64\$(Configuration)\;$(SolutionDir)..\vcpkg\installed\x64-windows\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;xxhash.lib;hdf5.lib;hdf5_cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)build\x64\$(Configuration)\;$(SolutionDir)..\vcpkg\installed\x64-windows\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;C:\MSFS SDK\SimConnect SDK\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;xxhash.lib;hdf5.lib;hdf5_cpp.lib;SimConnect.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -88,7 +90,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;$(IncludePath)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)3rdparty;$(SolutionDir)renderdoc;$(SolutionDir)gcv_utils;$(SolutionDir)..\reshade-5.8.0\include;$(SolutionDir)..\reshade-5.8.0\deps\imgui;$(SolutionDir)..\vcpkg\installed\x64-windows\include;$(SolutionDir)..\vcpkg\installed\x64-windows\include\eigen3;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\include;C:\MSFS SDK\SimConnect SDK\include;$(IncludePath)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -96,8 +98,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;xxhash.lib;hdf5.lib;hdf5_cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)build\x64\$(Configuration)\;$(SolutionDir)..\vcpkg\installed\x64-windows\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dxilconv.lib;segmentation_shadering.lib;xxhash.lib;hdf5.lib;hdf5_cpp.lib;SimConnect.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)build\x64\$(Configuration)\;$(SolutionDir)..\vcpkg\installed\x64-windows\lib;$(SolutionDir)..\DirectXShaderCompiler\out\build\x64-Release\lib;C:\MSFS SDK\SimConnect SDK\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />
   </ItemDefinitionGroup>
@@ -121,6 +123,9 @@
     <ClCompile Include="..\gcv_games\AssassinsCreedShadows.cpp" />
     <ClCompile Include="..\gcv_games\AssassinsCreedValhalla.cpp" />
     <ClCompile Include="..\gcv_games\Borderlands3.cpp" />
+    <ClCompile Include="..\gcv_games\MicrosoftFlightSimulator2020.cpp" />
+    <ClCompile Include="..\gcv_games\MicrosoftFlightSimulator2024.cpp" />
+    <ClCompile Include="..\gcv_games\msfs_simconnect_manager.cpp" />
     <ClCompile Include="..\gcv_games\Stray.cpp" />
     <ClCompile Include="..\gcv_games\HogwartsLegacy.cpp" />
     <ClCompile Include="..\gcv_games\BlackMythWukong.cpp" />
@@ -133,7 +138,6 @@
     <ClCompile Include="..\gcv_games\ResidentEvils.cpp" />
     <ClCompile Include="..\gcv_games\RoR2.cpp" />
     <ClCompile Include="..\gcv_games\Sekiro.cpp" />
-    <ClCompile Include="..\gcv_games\Shipbreaker.cpp" />
     <ClCompile Include="..\gcv_games\Witcher3.cpp" />
     <ClCompile Include="..\gcv_utils\camera_data_struct.cpp" />
     <ClCompile Include="..\gcv_utils\depth_utils.cpp" />
@@ -195,12 +199,14 @@
     <ClInclude Include="..\gcv_games\GTAV.h" />
     <ClInclude Include="..\gcv_games\HogwartsLegacy.h" />
     <ClInclude Include="..\gcv_games\HorizonZeroDawn.h" />
+    <ClInclude Include="..\gcv_games\MicrosoftFlightSimulator2020.h" />
+    <ClInclude Include="..\gcv_games\MicrosoftFlightSimulator2024.h" />
+    <ClInclude Include="..\gcv_games\msfs_simconnect_manager.h" />
     <ClInclude Include="..\gcv_games\RDR2.h" />
     <ClInclude Include="..\gcv_games\ResidentEvils.h" />
     <ClInclude Include="..\gcv_games\RoR2.h" />
     <ClInclude Include="..\gcv_games\Sekiro.h" />
     <ClInclude Include="..\gcv_games\Stray.h" />
-    <ClInclude Include="..\gcv_games\Shipbreaker.h" />
     <ClInclude Include="..\gcv_games\Witcher3.h" />
     <ClInclude Include="..\gcv_utils\assert_utils.hpp" />
     <ClInclude Include="..\gcv_utils\camera_data_struct.h" />
