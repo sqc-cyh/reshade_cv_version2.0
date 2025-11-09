@@ -62,6 +62,9 @@ void MSFSSimConnectManager::setup_camera_position_definitions() {
     } vars[] = {
         {"CAMERA GAMEPLAY PITCH YAW:0", "Radians"},
         {"CAMERA GAMEPLAY PITCH YAW:1", "Radians"},
+        {"CAMERA POSITION X", "meters"},
+        {"CAMERA POSITION Y", "meters"},
+        {"CAMERA POSITION Z", "meters"},
         {"PLANE LATITUDE", "Radians"},
         {"PLANE LONGITUDE", "Radians"},
         {"PLANE ALTITUDE", "Feet"},
@@ -114,24 +117,28 @@ void CALLBACK MSFSSimConnectManager::dispatch_proc(SIMCONNECT_RECV* pData, DWORD
 void MSFSSimConnectManager::process_camera_position_data(const void* data) {
     const double* d = static_cast<const double*>(data);
 
-    double camera_pitch = d[0];   // 相机俯仰 (弧度)
-    double camera_yaw = d[1];     // 相机偏航 (弧度)
-    double plane_lat = d[2];      // 纬度 (弧度)
-    double plane_lon = d[3];      // 经度 (弧度)
-    double plane_alt = d[4];      // 高度 (英尺)
-    double plane_pitch = d[5];    // 俯仰角 (弧度)
-    double plane_bank = d[6];     // 滚转角 (弧度)
-    double plane_heading = d[7];  // 航向角 (弧度)
+    double camera_pitch = d[0];    // 相机俯仰 (弧度)
+    double camera_heading = d[1];  // 相机偏航 (弧度)
+    double camera_X = d[2];        // 相机X (米)
+    double camera_Y = d[3];        // 相机Y (米)
+    double camera_Z = d[4];        // 相机Z (米)
+    double plane_lat = d[5];       // 纬度 (弧度)
+    double plane_lon = d[6];       // 经度 (弧度)
+    double plane_alt = d[7];       // 高度 (英尺)
+    double plane_pitch = d[8];     // 俯仰角 (弧度)
+    double plane_roll = d[9];      // 滚转角 (弧度)
+    double plane_heading = d[10];  // 航向角 (弧度)
 
     char raw_log[512];
     snprintf(raw_log, sizeof(raw_log),
-             "Raw data: CamPitch=%.3f, CamYaw=%.3f, Lat=%.6f, Lon=%.6f, Alt=%.1f, PlanePitch=%.3f, PlaneBank=%.3f, PlaneHeading=%.3f",
-             camera_pitch, camera_yaw, plane_lat, plane_lon, plane_alt,
-             plane_pitch, plane_bank, plane_heading);
+             "Raw data: CamPitch=%.3f, CamHeading=%.3f, CamX=%.3f, CamY=%.3f, CamZ=%.3f, Lat=%.6f, Lon=%.6f, Alt=%.1f, PlanePitch=%.3f, PlaneRoll=%.3f, PlaneHeading=%.3f",
+             camera_pitch, camera_heading, camera_X, camera_Y, camera_Z,
+             plane_lat, plane_lon, plane_alt,
+             plane_pitch, plane_roll, plane_heading);
     reshade::log_message(reshade::log_level::info, raw_log);
 
     bool valid = true;
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 11; ++i) {
         if (!std::isfinite(d[i])) {
             valid = false;
             break;
@@ -140,9 +147,9 @@ void MSFSSimConnectManager::process_camera_position_data(const void* data) {
 
     if (valid) {
         convert_from_position_and_rotation(
+            camera_pitch, camera_heading, camera_X, camera_Y, camera_Z,
             plane_lat, plane_lon, plane_alt,
-            plane_pitch, plane_bank, plane_heading,
-            camera_pitch, camera_yaw);
+            plane_pitch, plane_roll, plane_heading);
         has_position_data_ = true;
         has_camera_data_ = true;
     } else {
@@ -151,9 +158,10 @@ void MSFSSimConnectManager::process_camera_position_data(const void* data) {
 }
 
 void MSFSSimConnectManager::convert_from_position_and_rotation(
-    double camera_pitch, double camera_yaw,
+    double camera_pitch, double camera_heading,
+    double camera_X, double camera_Y, double camera_Z,
     double plane_lat, double plane_lon, double plane_alt,
-    double plane_pitch, double plane_bank, double plane_heading) {
+    double plane_pitch, double plane_roll, double plane_heading) {
     const double feet_to_meters = 0.3048;
     double altitude_meters = plane_alt * feet_to_meters;
 
@@ -163,25 +171,25 @@ void MSFSSimConnectManager::convert_from_position_and_rotation(
     double pos_z = -altitude_meters;
 
     double pitch = camera_pitch;
-    double bank = 0.0;
-    double heading = camera_yaw;
+    double roll = 0.0;
+    double heading = camera_heading;
 
     camera_buffer_[0] = MAGIC_NUMBER;
 
     double ch = cos(heading), sh = sin(heading);
     double cp = cos(pitch), sp = sin(pitch);
-    double cb = cos(bank), sb = sin(bank);
+    double cr = cos(roll), sr = sin(roll);
 
-    double r11 = ch * cb + sh * sp * sb;
-    double r12 = -ch * sb + sh * sp * cb;
+    double r11 = ch * cr + sh * sp * sr;
+    double r12 = -ch * sr + sh * sp * cr;
     double r13 = sh * cp;
 
-    double r21 = sb * cp;
-    double r22 = cb * cp;
+    double r21 = sr * cp;
+    double r22 = cr * cp;
     double r23 = -sp;
 
-    double r31 = -sh * cb + ch * sp * sb;
-    double r32 = sb * sh + ch * sp * cb;
+    double r31 = -sh * cr + ch * sp * sr;
+    double r32 = sr * sh + ch * sp * cr;
     double r33 = ch * cp;
 
     camera_buffer_[2] = r11;
@@ -210,7 +218,7 @@ void MSFSSimConnectManager::convert_from_position_and_rotation(
 
     char buf_log[512];
     snprintf(buf_log, sizeof(buf_log),
-             "Camera pose: counter=%.0f, pos=(%.1f,%.1f,%.1f), angles=(pitch=%.3f,heading=%.3f)",
+             "Camera pose: counter=%.0f, pos=(%.1f,%.1f,%.1f), angles=(pitch=%.3f, heading=%.3f)",
              camera_buffer_[1], camera_buffer_[5], camera_buffer_[9], camera_buffer_[13],
              pitch, heading);
     reshade::log_message(reshade::log_level::info, buf_log);
