@@ -33,7 +33,6 @@ class MSFSSimConnectManager {
 
     void convert_from_position_and_rotation(
         double camera_pitch, double camera_heading,
-        double camera_X, double camera_Y, double camera_Z,
         double plane_lat, double plane_lon, double plane_alt,
         double plane_pitch, double plane_roll, double plane_heading);
     void update_buffer_hashes();

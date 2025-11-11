@@ -18,7 +18,7 @@ class GameMicrosoftFlightSimulator2020 : public GameWithCameraDataInOneDLL {
     virtual scriptedcam_checkbuf_funptr get_scriptedcambuf_checkfun() const override;
     virtual uint64_t get_scriptedcambuf_sizebytes() const override;
     virtual bool copy_scriptedcambuf_to_matrix(uint8_t* buf, uint64_t buflen, CamMatrixData& rcam, std::string& errstr) const override;
-
+    virtual uint64_t get_scriptedcambuf_triggerbytes() const override;
     virtual bool can_interpret_depth_buffer() const override;
     virtual float convert_to_physical_distance_depth_u64(uint64_t depthval) const override;
 };

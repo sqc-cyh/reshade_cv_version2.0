@@ -79,49 +79,91 @@ void UpdateCameraBufferFromReshade(reshade::api::effect_runtime* runtime) {
     auto& shdata = runtime->get_device()->get_private_data<image_writer_thread_pool>();
 
     bool available = false;
-    if (!read_uniform_value(runtime, "IGCS_cameraDataAvailable", available) || !available) {
-        // 如果相机数据不可用，清零缓冲区
-        for (int i = 2; i <= 14; ++i) g_camera_data_buffer[i] = 0.0;
-        g_camera_data_buffer[15] = g_camera_data_buffer[1];
-        g_camera_data_buffer[16] = g_camera_data_buffer[1];
-        return;
-    }
+    if (read_uniform_value(runtime, "IGCS_cameraDataAvailable", available) && available) {
+        // 1. 从 IGCS 读取原始相机数据
+        float fov = 0.0f;
+        float camera_ue_pos[3] = {0.0f};              // UE坐标系下的位置 (+X前, +Y右, +Z上)
+        float roll = 0.0f, pitch = 0.0f, yaw = 0.0f;  // 弧度
 
-    // 1. 从 IGCS 读取原始相机数据
-    float fov = 0.0f;
-    float camera_ue_pos[3] = {0.0f};              // UE坐标系下的位置 (+X前, +Y右, +Z上)
-    float roll = 0.0f, pitch = 0.0f, yaw = 0.0f;  // 弧度
+        read_uniform_value(runtime, "IGCS_cameraFoV", fov);
+        read_uniform_value(runtime, "IGCS_cameraWorldPosition", camera_ue_pos, 3);
+        read_uniform_value(runtime, "IGCS_cameraRotationRoll", roll);
+        read_uniform_value(runtime, "IGCS_cameraRotationPitch", pitch);
+        read_uniform_value(runtime, "IGCS_cameraRotationYaw", yaw);
 
-    read_uniform_value(runtime, "IGCS_cameraFoV", fov);
-    read_uniform_value(runtime, "IGCS_cameraWorldPosition", camera_ue_pos, 3);
-    read_uniform_value(runtime, "IGCS_cameraRotationRoll", roll);
-    read_uniform_value(runtime, "IGCS_cameraRotationPitch", pitch);
-    read_uniform_value(runtime, "IGCS_cameraRotationYaw", yaw);
+        // 2. 获取特定于游戏的接口实例
+        auto* game_interface = shdata.get_game_interface();
 
-    // 2. 获取特定于游戏的接口实例
-    auto* game_interface = shdata.get_game_interface();
+        // 3. 调用游戏特定的后处理函数
+        if (game_interface) {
+            game_interface->process_camera_buffer_from_igcs(g_camera_data_buffer, camera_ue_pos, roll, pitch, yaw, fov);
+        } else {
+            // 如果没有找到游戏接口，清空数据以避免发送脏数据
+            for (int i = 2; i <= 14; ++i) g_camera_data_buffer[i] = 0.0;
+        }
 
-    // 3. 调用游戏特定的后处理函数
-    if (game_interface) {
-        game_interface->process_camera_buffer_from_igcs(g_camera_data_buffer, camera_ue_pos, roll, pitch, yaw, fov);
+        // 4. 更新计数器和哈希值 (这部分是通用的)
+        g_camera_buffer_counter += 1.0;
+        if (g_camera_buffer_counter > 9999.5) g_camera_buffer_counter = 1.0;
+        g_camera_data_buffer[1] = g_camera_buffer_counter;
+
+        double poshash1 = 0.0;
+        double poshash2 = 0.0;
+        for (int i = 1; i <= 14; ++i) {
+            poshash1 += g_camera_data_buffer[i];
+            poshash2 += (i % 2 == 0 ? -g_camera_data_buffer[i] : g_camera_data_buffer[i]);
+        }
+        g_camera_data_buffer[15] = poshash1;
+        g_camera_data_buffer[16] = poshash2;
     } else {
-        // 如果没有找到游戏接口，清空数据以避免发送脏数据
-        for (int i = 2; i <= 14; ++i) g_camera_data_buffer[i] = 0.0;
-    }
+        auto* game_interface = shdata.get_game_interface();
+        if (game_interface && std::string(game_interface->gamename_simpler()) == "MicrosoftFlightSimulator2020") {
+            MSFSSimConnectManager::get().update();
+            if (MSFSSimConnectManager::get().has_camera_data()) {
+                double* simbuf = MSFSSimConnectManager::get().get_camera_buffer();
+                // Copy SimConnect buffer into g_camera_data_buffer
+                // Both are [magic, counter, r00, r01, -r02, x, r10, r11, -r12, y, -r20, -r21, r22, z, fov, hash1, hash2]
+                for (int i = 0; i < 17; ++i) {
+                    g_camera_data_buffer[i] = simbuf[i];
+                }
+                char buffer_log[2048];
+                snprintf(buffer_log, sizeof(buffer_log),
+                         "MSFS Camera Buffer Content:\n"
+                         "  Magic: %.15e\n"
+                         "  Counter: %.1f\n"
+                         "  Rotation Matrix:\n"
+                         "    [%.6f, %.6f, %.6f]\n"
+                         "    [%.6f, %.6f, %.6f]\n"
+                         "    [%.6f, %.6f, %.6f]\n"
+                         "  Position: (%.3f, %.3f, %.3f)\n"
+                         "  FOV: %.3f\n"
+                         "  Hash1: %.6f, Hash2: %.6f",
+                         g_camera_data_buffer[0],  // magic
+                         g_camera_data_buffer[1],  // counter
+                         // 旋转矩阵
+                         g_camera_data_buffer[2], g_camera_data_buffer[3], g_camera_data_buffer[4],     // r00, r01, r02
+                         g_camera_data_buffer[6], g_camera_data_buffer[7], g_camera_data_buffer[8],     // r10, r11, r12
+                         g_camera_data_buffer[10], g_camera_data_buffer[11], g_camera_data_buffer[12],  // r20, r21, r22
+                         // 位置
+                         g_camera_data_buffer[5], g_camera_data_buffer[9], g_camera_data_buffer[13],  // x, y, z
+                         // FOV
+                         g_camera_data_buffer[14],
+                         // 哈希值
+                         g_camera_data_buffer[15], g_camera_data_buffer[16]);
 
-    // 4. 更新计数器和哈希值 (这部分是通用的)
-    g_camera_buffer_counter += 1.0;
-    if (g_camera_buffer_counter > 9999.5) g_camera_buffer_counter = 1.0;
-    g_camera_data_buffer[1] = g_camera_buffer_counter;
+                reshade::log_message(reshade::log_level::info, buffer_log);
 
-    double poshash1 = 0.0;
-    double poshash2 = 0.0;
-    for (int i = 1; i <= 14; ++i) {
-        poshash1 += g_camera_data_buffer[i];
-        poshash2 += (i % 2 == 0 ? -g_camera_data_buffer[i] : g_camera_data_buffer[i]);
+            } else {
+                for (int i = 2; i <= 14; ++i) g_camera_data_buffer[i] = 0.0;
+                g_camera_data_buffer[15] = g_camera_data_buffer[1];
+                g_camera_data_buffer[16] = g_camera_data_buffer[1];
+            }
+        } else {
+            for (int i = 2; i <= 14; ++i) g_camera_data_buffer[i] = 0.0;
+            g_camera_data_buffer[15] = g_camera_data_buffer[1];
+            g_camera_data_buffer[16] = g_camera_data_buffer[1];
+        }
     }
-    g_camera_data_buffer[15] = poshash1;
-    g_camera_data_buffer[16] = poshash2;
 }
 
 typedef std::chrono::steady_clock hiresclock;
@@ -147,7 +189,6 @@ static void on_init(reshade::api::device* device) {
     shdata.init_time = hiresclock::now();
 }
 static void on_destroy(reshade::api::device* device) {
-    MSFSSimConnectManager::get().shutdown();
     device->get_private_data<image_writer_thread_pool>().change_num_threads(0);
     device->get_private_data<image_writer_thread_pool>().print_waiting_log_messages();
 
@@ -172,7 +213,6 @@ static void on_reshade_finish_effects(reshade::api::effect_runtime* runtime,
     float shadercamposbuf[4];
     reshade::api::device* const device = runtime->get_device();
     auto& segmapp = device->get_private_data<segmentation_app_data>();
-    MSFSSimConnectManager::get().update();
     UpdateCameraBufferFromReshade(runtime);
     {  // record
         const int64_t now_us = std::chrono::duration_cast<std::chrono::microseconds>(hiresclock::now() - shdata.init_time).count();

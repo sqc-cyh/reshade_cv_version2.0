@@ -28,10 +28,17 @@ bool GameMicrosoftFlightSimulator2020::can_interpret_depth_buffer() const {
 }
 
 float GameMicrosoftFlightSimulator2020::convert_to_physical_distance_depth_u64(uint64_t depthval) const {
-    float normalized_depth = 1.0f - static_cast<float>(depthval) / 16777215.0;
+    float normalized_depth = 1.0f - static_cast<float>(depthval) / 4294967295.0;
     const float z_near = 1.0f;
     const float z_far = 50000.0f;
     const float linear_depth = z_near * z_far / (z_far - normalized_depth * (z_far - z_near));
 
     return linear_depth;
+}
+uint64_t GameMicrosoftFlightSimulator2020::get_scriptedcambuf_triggerbytes() const {
+    const double magic_double = 1.20040525131452021e-12;
+    uint64_t magic_int;
+    static_assert(sizeof(magic_double) == sizeof(magic_int));
+    memcpy(&magic_int, &magic_double, sizeof(magic_int));
+    return magic_int;
 }

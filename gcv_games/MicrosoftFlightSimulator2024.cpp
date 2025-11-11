@@ -5,8 +5,7 @@
 #include "gcv_utils/depth_utils.h"
 #include "gcv_utils/scripted_cam_buf_templates.h"
 
-
-std::string GameMicrosoftFlightSimulator2024::gamename_verbose() const { return "Euro Truck Simulator 2"; }
+std::string GameMicrosoftFlightSimulator2024::gamename_verbose() const { return "Microsoft FlightSimulator 2024"; }
 
 std::string GameMicrosoftFlightSimulator2024::camera_dll_name() const { return ""; }
 uint64_t GameMicrosoftFlightSimulator2024::camera_dll_mem_start() const { return 0; }
