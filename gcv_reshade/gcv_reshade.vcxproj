@@ -116,6 +116,7 @@
     <ClCompile Include="..\gcv_games\Crysis.cpp" />
     <ClCompile Include="..\gcv_games\Cyberpunk2077.cpp" />
     <ClCompile Include="..\gcv_games\DarkSoulsIII.cpp" />
+    <ClCompile Include="..\gcv_games\DeathStrandingDirectorsCut.cpp" />
     <ClCompile Include="..\gcv_games\DishonoredDOTO.cpp" />
     <ClCompile Include="..\gcv_games\EuroTruckSimulator2.cpp" />
     <ClCompile Include="..\gcv_games\AssassinsCreedOdyssey.cpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="..\gcv_games\MicrosoftFlightSimulator2020.cpp" />
     <ClCompile Include="..\gcv_games\MicrosoftFlightSimulator2024.cpp" />
     <ClCompile Include="..\gcv_games\msfs_simconnect_manager.cpp" />
+    <ClCompile Include="..\gcv_games\SilentHill2.cpp" />
     <ClCompile Include="..\gcv_games\Stray.cpp" />
     <ClCompile Include="..\gcv_games\HogwartsLegacy.cpp" />
     <ClCompile Include="..\gcv_games\BlackMythWukong.cpp" />
@@ -190,6 +192,7 @@
     <ClInclude Include="..\gcv_games\Crysis.h" />
     <ClInclude Include="..\gcv_games\Cyberpunk2077.h" />
     <ClInclude Include="..\gcv_games\DarkSoulsIII.h" />
+    <ClInclude Include="..\gcv_games\DeathStrandingDirectorsCut.h" />
     <ClInclude Include="..\gcv_games\DishonoredDOTO.h" />
     <ClInclude Include="..\gcv_games\EuroTruckSimulator2.h" />
     <ClInclude Include="..\gcv_games\game_interface_factory.h" />
@@ -206,6 +209,7 @@
     <ClInclude Include="..\gcv_games\ResidentEvils.h" />
     <ClInclude Include="..\gcv_games\RoR2.h" />
     <ClInclude Include="..\gcv_games\Sekiro.h" />
+    <ClInclude Include="..\gcv_games\SilentHill2.h" />
     <ClInclude Include="..\gcv_games\Stray.h" />
     <ClInclude Include="..\gcv_games\Witcher3.h" />
     <ClInclude Include="..\gcv_utils\assert_utils.hpp" />
