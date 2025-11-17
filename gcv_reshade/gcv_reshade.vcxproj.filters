@@ -59,6 +59,7 @@
     <ClCompile Include="..\gcv_games\msfs_simconnect_manager.cpp" />
     <ClCompile Include="..\gcv_games\DeathStrandingDirectorsCut.cpp" />
     <ClCompile Include="..\gcv_games\SilentHill2.cpp" />
+    <ClCompile Include="..\gcv_games\DevilMayCry5.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdparty\cnpy.h" />
@@ -142,6 +143,7 @@
     <ClInclude Include="..\gcv_games\msfs_simconnect_manager.h" />
     <ClInclude Include="..\gcv_games\DeathStrandingDirectorsCut.h" />
     <ClInclude Include="..\gcv_games\SilentHill2.h" />
+    <ClInclude Include="..\gcv_games\DevilMayCry5.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\3rdparty\fpzip\fpe.inl" />

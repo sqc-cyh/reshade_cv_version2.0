@@ -117,6 +117,7 @@
     <ClCompile Include="..\gcv_games\Cyberpunk2077.cpp" />
     <ClCompile Include="..\gcv_games\DarkSoulsIII.cpp" />
     <ClCompile Include="..\gcv_games\DeathStrandingDirectorsCut.cpp" />
+    <ClCompile Include="..\gcv_games\DevilMayCry5.cpp" />
     <ClCompile Include="..\gcv_games\DishonoredDOTO.cpp" />
     <ClCompile Include="..\gcv_games\EuroTruckSimulator2.cpp" />
     <ClCompile Include="..\gcv_games\AssassinsCreedOdyssey.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="..\gcv_games\Cyberpunk2077.h" />
     <ClInclude Include="..\gcv_games\DarkSoulsIII.h" />
     <ClInclude Include="..\gcv_games\DeathStrandingDirectorsCut.h" />
+    <ClInclude Include="..\gcv_games\DevilMayCry5.h" />
     <ClInclude Include="..\gcv_games\DishonoredDOTO.h" />
     <ClInclude Include="..\gcv_games\EuroTruckSimulator2.h" />
     <ClInclude Include="..\gcv_games\game_interface_factory.h" />
